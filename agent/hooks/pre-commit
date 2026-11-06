@@ -1,0 +1,29 @@
+#!/bin/sh
+# Hook de git (agnostico: sirve para Claude Code, Codex o commits manuales).
+# Activar una vez por clon:  git config core.hooksPath agent/hooks
+#
+# Regla 0 de AGENTS.md hecha obligatoria:
+#  1) Si el commit toca archivos fuera de agent/ y .claude/, debe incluir agent/CHANGELOG.md.
+#  2) agent/CHANGELOG.md es solo-anadir: no se permiten lineas borradas.
+# Saltarse este hook (--no-verify) esta prohibido por AGENTS.md.
+
+staged=$(git diff --cached --name-only --diff-filter=ACMRD)
+[ -z "$staged" ] && exit 0
+
+outside=$(printf '%s\n' "$staged" | grep -v '^agent/' | grep -v '^\.claude/' || true)
+
+if [ -n "$outside" ]; then
+  if ! printf '%s\n' "$staged" | grep -qx 'agent/CHANGELOG.md'; then
+    echo "ERROR (Regla 0): este commit cambia archivos del proyecto pero NO incluye agent/CHANGELOG.md." >&2
+    echo "Registra el cambio (subagente scribe, o a mano con el formato del encabezado), haz 'git add agent/' y reintenta." >&2
+    exit 1
+  fi
+fi
+
+deleted=$(git diff --cached --numstat -- agent/CHANGELOG.md | awk '{print $2}')
+if [ -n "$deleted" ] && [ "$deleted" != "0" ] && [ "$deleted" != "-" ]; then
+  echo "ERROR (Regla 0): agent/CHANGELOG.md es solo-anadir; este commit borra o edita $deleted linea(s) existentes." >&2
+  exit 1
+fi
+
+exit 0

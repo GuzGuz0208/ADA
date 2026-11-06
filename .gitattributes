@@ -1,0 +1,9 @@
+# Finales de línea LF en todo el repo (evita que un hook de git se rompa por CRLF en Windows)
+* text=auto eol=lf
+agent/hooks/* text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.pdf binary
+*.docx binary
+*.png binary
+*.jpg binary

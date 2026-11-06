@@ -1,0 +1,28 @@
+# Material de consulta (libros y notas): local, no se versiona
+/docs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.hypothesis/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Editor / SO / Office
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+*.tmp
+
+# Logs (excepto la traza cruda de agentes, que SÍ se versiona)
+*.log
+!agent/log/auto_changes.log
+
+# Configuración local de Claude Code
+.claude/settings.local.json

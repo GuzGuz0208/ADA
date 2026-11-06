@@ -1,0 +1,85 @@
+# SPEC — Grupo 2 (Proyecto Red): requisitos y modelo
+
+Fuentes (citar al usar un requisito): `project-docs/Proyecto-2026B.pdf` (Subproyecto 2, cap. 3 del PDF, pp. 10-12; **referencia principal**), `project-docs/Proyecto_ADAG2.docx` (versión corta del G2), `project-docs/Guia_Primera_Entrega_ADAG_2026B_Resumen.docx` y `..._Actualizada_Grupo1.pdf`, `project-docs/entrada_G2_red_15_nodos.json`.
+Estado: redactado por Claude Sonnet 5.5 el 2026-11-05. Los esqueletos de §5 y los valores de §6 son **puntos de partida a re-verificar**, no verdades.
+
+## 1. Qué se entrega y cuándo
+Primera entrega (guía): 4 productos. La guía advierte que pedirlos en una sola fecha es "una propuesta de organización que debe confirmarse con el docente" (cronograma oficial: sem. 1-2 formalización; 3-4 NP-dureza; 5-6 exacto + T(n); 7-8 aproximado; 9-11 experimentos; final y sustentaciones).
+
+| # | Producto | Evidencia verificable (guía §2-6) |
+|---|---|---|
+| 1 | Informe de formalización (común al grupo) | Por separado Parte 1 y Parte 2: contexto, entradas y **tamaño** (no reducir a una variable si intervienen varias), salidas, función objetivo y restricciones, supuestos y alcance |
+| 2 | Prueba de NP-dureza (capítulo del mismo informe) | Versión de decisión + transformación polinomial desde **Cobertura Máxima** + equivalencia **en ambos sentidos** (sí ⇔ sí) + conclusión de qué componente es NP-difícil (Parte 2) |
+| 3 | Repositorio | Código ejecutable, README, versión de Python, dependencias, ejemplo pequeño, generador de instancias con semillas fijas, resultados esperados, ≥1 caso que verifique restricciones, identificación (integrantes, subproyecto, rama/versión, **enlace accesible**) |
+| 4 | Manual técnico | Entorno, arquitectura (carpetas/módulos), funcionamiento (flujo, algoritmo, estructuras, condición de parada), uso paso a paso (formato de entrada, ejemplo, significado de la salida), validación y límites |
+| G2 | **Ejecutar la solución base con los casos de la profesora** | Resultados, **tiempo por caso** y **traza**: selección de nodos, ganancias marginales, reparto del presupuesto y verificación de restricciones |
+
+Condiciones de aceptación: reproducible sin editar la lógica · usar los casos recibidos y reportar salida, tiempo y traza identificada por caso · informe, repo, manual y evidencias de **la misma versión** (usar tag git).
+Pendiente de confirmar con la profesora: ¿qué se entrega exactamente mañana? (Q-01 en DECISIONS).
+
+Diferencias docx ↔ PDF (usar el PDF; registrar si importa): semanas (11 vs 13); el PDF detalla variantes (Khuller, costo O(T·(N·k·τ+N+B log N)), caso aditivo/competencia); el docx escribe T(N,B)=O(B log N) y el PDF **O(N + B log N)** — usar el del PDF (el montículo se construye en O(N); sin ese término la cota no vale cuando B es pequeño).
+
+## 2. Requisitos del enunciado (Subproyecto 2)
+**Escenario.** N nodos entrenan colaborativamente T rondas; cada actualización lleva ruido calibrado; cada nodo tiene un presupuesto total de "ruido tolerable" para todo el proyecto; en cada ronda se decide quién participa y cuánto presupuesto gasta.
+
+**Parte 1 — Reparto óptimo (exacto, polinomial).** Tamaño de entrada: N (nodos ya seleccionados) y B (presupuesto entero). Entrada: u_i(x) creciente y cóncava sobre enteros ≥ 0 (ganancia marginal no creciente) y B. Objetivo: repartir con Σx_i ≤ B maximizando Σu_i(x_i). Algoritmo 3.2.1 voraz por ganancia marginal; Teorema 3.2.1 (optimalidad, **argumento de intercambio**); T(N,B)=O(N + B log N) con montículo; **explicar que es pseudo-polinomial** (B es valor, no longitud en bits) y discutir presupuesto continuo (water-filling). **No** resolver por fuerza bruta ni metaheurísticas.
+
+**Parte 2 — Selección de participantes (NP-difícil, aproximable).** Tamaño: N y k (k<N). Entrada: f monótona y submodular sobre subconjuntos. Objetivo: subconjunto de tamaño k que maximice f. Proposición 3.3.1: NP-dureza por reducción desde **Cobertura Máxima** (nodo por subconjunto, f(A)=|∪S_i|), **completa**. Teorema 3.3.1: voraz de mayor ganancia marginal ≥ (1−1/e)≈63 % del óptimo (Nemhauser–Wolsey–Fisher 1978; el PDF lista también Fisher et al. 1978 como II); **verificar con fuerza bruta (C(N,k) subconjuntos) en instancias pequeñas**. T(N,k)=O(N·k·τ): **precisar τ** para la f implementada.
+
+**Variantes (todas obligatorias; P2 para mañana):** (a) costos de participación + presupuesto (cobertura máxima con presupuesto): implementar y citar Khuller–Moss–Naor 1999 (mejor entre voraz por razón utilidad/costo y mejor nodo individual, garantía ½(1−1/e); con enumeración parcial 1−1/e), derivar T de la versión elegida. (b) T rondas con fallas (q independiente por nodo y ronda; presupuesto de cada nodo es total para las T rondas): derivar O(T·(N·k·τ+N+B log N)) y comparar ≥2 políticas de gasto (uniforme vs concentrado al inicio). (c) Nodos relacionados (grafo G): caso aditivo u_i(x_i)+γΣ_{j∈N(i)}h(x_j), h cóncava creciente → demostrar que sigue separable y cóncavo por nodo (el voraz sigue óptimo); caso competencia u_i(x_i)(1−γΣ_{j∈N(i)}x_j/B) → analizar si el voraz sigue óptimo, dar contraejemplo si no, proponer heurística con su T.
+
+**Marco común (§1.2 del PDF), obligatorio para todo algoritmo:** (1) tamaño de entrada definido y justificado; (2) T(n) del exacto **deducido** contando operaciones o recurrencia, paso a paso, con su O(·); (3) NP-dureza por reducción desde problema NP-difícil conocido; (4) para aproximados/heurísticos: su propio T(n) y la garantía (demostrada o citada y aplicada correctamente); (5) validación experimental: tiempo real para n crecientes, gráfica, contraste con T(n) teórico. "Solo 'tardó X segundos'" no cumple.
+
+**Entregables finales / evaluación:** informe técnico + implementación (semillas fijas, **≥5 tamaños de n**, tiempos, gráfica tiempo vs n) + sustentación grupal 15-20 min **sin notas** (reducción NP y deducción de T(n) del exacto) + sustentación individual. Pesos: formalización 10 %, NP-dureza 10 %, T(n) exacto 10 %, aproximado (diseño, T, cota) 15 %, validación experimental 10 %, **sustentación 45 %**.
+
+## 3. Datos de la profesora (`project-docs/entrada_G2_red_15_nodos.json`)
+Esquema: `parametros{numero_nodos=15, numero_rondas=3, cupo_participantes_por_ronda_k=5, presupuesto_ruido_por_ronda_B=30, presupuesto_costos_participacion_por_ronda=24}`; `grafo[105 aristas {u,v,peso_influencia}]`; `nodos[15 × {id, coeficiente_utilidad, presupuesto_total_nodo, costo_participacion}]`.
+Hallazgos (calculados): 
+- El grafo es **completo K15** (C(15,2)=105), cada par aparece una vez como (u<v), sin inversos. `peso_influencia` ∈ [0.2, 0.8] y **depende solo del nodo destino v** (patrón cíclico). → Tratar como **no dirigido y simétrico** w_uv=w_vu (D-02); marcar en el informe que la dirección no está especificada.
+- `presupuesto_total_nodo` = 18 para todos. Con B=30 por ronda y 3 rondas, un nodo que reciba ~7 por ronda (≈ lo que da el reparto a los mejores) topa el límite 18 en la ronda 3 ⇒ **los topes por nodo sí importan** y la política de gasto entre rondas es relevante.
+- Costos de participación 2…7 (suma de los 5 más baratos = 15; de los 5 más caros = 32): con k=5 **y** costo ≤ 24 ambas restricciones pueden ser activas.
+- **No traen:** forma de u_i(x), forma de f(S), probabilidad de falla q. Ningún documento del Grupo 2 las define (el enunciado dice "precisar τ para la función de utilidad que el equipo implemente"): decisión del equipo → D-01, D-02, D-07.
+- La profesora puede ejecutar **otros JSON con este esquema** (la guía habla de "casos"): nada de constantes escritas a fuego; validar el esquema y fallar con mensajes claros.
+
+## 4. Modelo adoptado (D-01…D-04, ver DECISIONS)
+Notación: nodos V={1..N}; a_i>0 (coeficiente); c_i∈ℕ (costo de participación); R_i∈ℕ (presupuesto total del nodo); W∈[0,1]^{N×N} simétrica con w_ii=1; T rondas; k cupo; B presupuesto de ruido por ronda (enteros); L presupuesto de costos por ronda.
+
+**Parte 1.** u_i(x)=a_i·ln(1+x), x∈ℕ. Ganancia marginal g_i(t)=u_i(t+1)−u_i(t)=a_i·ln((t+2)/(t+1)) > 0, **estrictamente decreciente** en t ⇒ u_i cóncava creciente. Entrada: conjunto S de nodos participantes, topes r_i (presupuesto restante del nodo; r_i=R_i en ronda 1), B. Salida: x∈ℕ^S con Σx_i≤B, x_i≤r_i, maximizando Σu_i(x_i). Tamaño: (|S|,B).
+Algoritmo: montículo máximo de g_i(x_i) (construir O(N)); B veces: extraer (O(log N)), x_i++, reinsertar si x_i<r_i (O(log N)). T(N,B)=O(N+B log N). Continuo (water-filling): x_i=clamp(a_i/λ−1, 0, r_i) con λ tal que Σx_i=B ⇒ O(N log N), independiente de B.
+
+**Parte 2.** Candidatos = objetivos = V. f(S)=Σ_{j∈V} a_j·[1−Π_{i∈S}(1−w_ij)]; f(∅)=0. Con w_jj=1, un nodo elegido se cubre a sí mismo con prob. 1. Monótona y submodular: Δ(i|S)=Σ_j a_j·w_ij·Π_{l∈S}(1−w_lj), y cada factor (1−w_lj)∈[0,1], así que Δ no crece al agregar elementos a S. Restricciones de la base (D-03): |S|≤k **y** Σ_{i∈S}c_i≤L. Objetivo: maximizar f(S). Tamaño: (N,k) (+L).
+**Familia general** (para la reducción): candidatos N, objetivos M (distintos), a_j≥0, w_ij∈[0,1]. El JSON es el caso M=N con w_ii=1.
+Evaluación eficiente (τ): mantener R_j=Π_{l∈S}(1−w_lj); entonces Δ(i|S)=Σ_j a_j·w_ij·R_j ⇒ **τ=O(M)**, actualizar R tras elegir: O(M). Voraz: T(N,k)=O(k·N·M) ⇒ **O(k·N²) con M=N**. Fuerza bruta: Σ_{r≤k} C(N,r)·O(r·M) (exponencial).
+Voraz con ambas restricciones (D-03): mejor de {voraz por ganancia, voraz por ganancia/costo, mejor singleton factible}, todos respetando |S|≤k y costo≤L en cada paso. **No afirmar garantía teórica para la combinación** sin verificarla (R-01); sí medir la razón contra el exacto (≤4 943 subconjuntos con N=15: Σ_{r≤5}C(15,r)).
+
+**Rondas (P2).** Ronda t: A_t = nodos disponibles (cada uno falla con prob. q, independiente); S_t⊆A_t por la Parte 2; reparto de B sobre S_t con topes r_i(t)=R_i−Σ_{s<t}x_{i,s}. Se reportan Σ_t f(S_t) y Σ_t Σ_i u_i(x_{i,t}). Políticas: *uniforme* (tope por ronda ≈ restante/(T−t+1)) vs *concentrado* (sin tope extra). Para el caso de la profesora q=0 (D-07) y barrido q∈{0.1,0.2,0.3} como extra.
+
+## 5. Resultados a demostrar (esqueletos para el theorist)
+**T1 — Optimalidad del voraz (Parte 1), por intercambio.** Sea y un óptimo que coincide con las primeras j−1 elecciones del voraz (y_i ≥ x_i^{(j−1)} ∀i). Sea p el nodo de la j-ésima elección (argmax de g entre nodos bajo su tope). Si y_p>x_p^{(j−1)}, y ya contiene esa elección. Si no: y_p=x_p^{(j−1)}; si sobra presupuesto, agregar una unidad a p mejora (g_p>0) → contradice optimalidad; así Σy=B>j−1 y ∃q≠p con y_q>x_q^{(j−1)}. Mover una unidad de q a p es factible (p tiene holgura porque el voraz pudo elegirlo) y cambia la utilidad en g_p(x_p^{(j−1)})−g_q(y_q−1) ≥ 0, pues g_q(y_q−1) ≤ g_q(x_q^{(j−1)}) ≤ g_p(x_p^{(j−1)}) (g_q decreciente; p es argmax). El nuevo y' sigue óptimo y coincide j pasos. Inducción ⇒ voraz óptimo. *Prueba alternativa:* la utilidad de cualquier reparto factible es suma de ganancias marginales que forman un prefijo por nodo; el voraz toma las B mayores ganancias del multiconjunto {g_i(t)}, y como cada g_i es decreciente ese conjunto es prefijo-cerrado ⇒ es cota superior alcanzable.
+**T2 — T(N,B)=O(N+B log N)** con costeo línea a línea (formato `STYLE_PROFESORA`), pseudo-polinomial, y nota de water-filling.
+**T3 — NP-dureza de Selección.** *Sel-Dec*: dada una instancia de la familia general, k y t, ¿existe A con |A|≤k y f(A)≥t? Pertenece a NP (certificado A; f se evalúa en O(|A|·M); pesos racionales). Reducción desde Cobertura Máxima(U,{S_i},k,t): candidatos i=1..N, objetivos U con a_j=1, w_ij=1 si j∈S_i y 0 si no, mismo k y t, sin costos. Entonces 1−Π_{i∈A}(1−w_ij)=1 ⇔ ∃i∈A con j∈S_i, luego f(A)=|∪_{i∈A}S_i|. (⇒) k conjuntos con unión ≥t dan A con f(A)≥t; (⇐) A con f(A)≥t da k conjuntos con unión ≥t. Construcción O(N·|U|). Conclusión: Sel-Dec NP-difícil (en realidad NP-completo) y la versión de optimización también. Cobertura Máxima es NP-difícil (ya demostrado en el curso, vía Cobertura de Conjuntos; Karp 1972).
+**T4 — Cota (1−1/e)** (NWF 1978): citar el teorema con sus hipótesis (monótona, submodular, f(∅)=0, restricción de cardinalidad), comprobar cada hipótesis para nuestra f (§4) y verificar empíricamente contra fuerza bruta. Opcional [VERIFICAR]: Feige 1998 (no mejor que 1−1/e salvo P=NP).
+**T5 — T(N,k)=O(N·k·τ), τ=O(M)** y de la fuerza bruta.
+**T6 (P2) variantes:** costos (cita [VERIFICAR] Khuller et al. 1999 está probada para cobertura con pesos aditivos; para f general monótona submodular con knapsack, la cita correcta es otra, p. ej. Sviridenko 2004 [VERIFICAR]); aditivo (agrupar términos ⇒ separable y cóncavo); competencia (contraejemplo con instancia pequeña verificada por fuerza bruta + heurística).
+
+## 6. Valores de referencia PRELIMINARES (prototipo descartable; el verifier debe re-derivarlos con el código real)
+Caso de la profesora, ronda 1, con D-01…D-03, w simétrico, w_ii=1:
+- Σa_j = 147.8 = f(V). Solo cupo k=5: voraz {N11,N14,N09,N15,N13} f≈145.5795; exacto {N09,N11,N12,N13,N15} f≈145.9072; razón ≈ 0.9978 (cota 0.6321).
+- k=5 y costo≤24: voraz-ganancia {N11,N14,N09,N15,N13} costo 23, f≈145.5795; voraz-razón {N05,N09,N14,N11,N15} costo 18, f≈145.1056; exacto con ambas restricciones {N09,N11,N13,N14,N15}, f≈145.5795 (razón 1.0).
+- Reparto B=30 sobre {N11,N14,N09,N15,N13}: N11=5, N14=7, N09=7, N15=6, N13=5; utilidad ≈ 88.564 = óptimo por DP. Primeras ganancias: N14 7.001, N09 6.862, N15 6.585, N13 5.753, N11 5.268.
+- **Advertencia (R-02):** con grafo completo y pesos ≥0.2 la f se **satura** (≈98 % de Σa con 5 nodos): la instancia de la profesora casi no discrimina entre selecciones. Para que la verificación de 1−1/e sea informativa, **añadir familias sintéticas** (cobertura 0/1 dispersa, el ejemplo adversarial clásico de NWF, pesos aleatorios en grafos ralos).
+
+## 7. Plan experimental (P1; semillas fijas, mediana de ≥5 repeticiones, `time.perf_counter`)
+- **E1 Reparto:** N∈{100,200,400,800,1600,3200} con B fijo, y B∈{10³,…,10⁵} con N fijo; ajustar c·(N+B log N); reportar cociente tiempo/T(n) y pendiente log-log.
+- **E2 Selección voraz:** N∈{50,100,200,400,800,1600}, k=10 (esperado ∝N² porque τ=O(N)); k∈{5,10,20,40}, N=400 (∝k).
+- **E3 Exacto:** N∈{10,12,14,16,18,20}, k=⌊N/3⌋: crecimiento ~C(N,k).
+- **E4 Cota:** ≥200 instancias pequeñas (cobertura 0/1 dispersa, pesos aleatorios, caso adversarial NWF); registrar la razón mínima y verificar ≥1−1/e.
+- **E5 Optimalidad del reparto:** ≥500 instancias pequeñas vs. programación dinámica exacta (igualdad hasta 1e-9).
+- Salidas: CSV + PNG en `results/experimentos/`, con la semilla y versión en el nombre del archivo.
+
+## 8. Checklist de aceptación P0 (mañana)
+- [ ] Informe: formalización Parte 1 y Parte 2 por separado (tamaño con las variables correctas) · NP-dureza completa en ambos sentidos · supuestos y D-01…D-03 explícitos.
+- [ ] Repo con README (versión Python, dependencias, ejemplo pequeño), generador con semillas, pruebas (≥1 que verifique restricciones), identificación y enlace accesible.
+- [ ] `python -m ada_g2 run --input <json>` produce por caso: resultado, **tiempo**, **traza** (selección, ganancias marginales, reparto, verificación de restricciones).
+- [ ] Manual técnico completo (guía §6).
+- [ ] Consistencia: informe = repo = manual = resultados (tag `v0.1-primera-entrega`).
