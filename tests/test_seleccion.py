@@ -10,6 +10,7 @@ from hypothesis import HealthCheck, given, settings, strategies as st
 from ada_g2 import select as sel
 from ada_g2.certificates import certificar_seleccion
 from ada_g2.exact import fuerza_bruta
+from ada_g2.generator import instancia_ajustada
 from ada_g2.select import limites, seleccionar
 from helpers import cobertura_01, cuadrar, f_naive, optimo_bruto, simetrica
 
@@ -106,35 +107,13 @@ def test_hypothesis_cota_modo_k(seed, fam):
 
 
 # ---------------- Instancia ajustada (W3, D-15) ----------------
-def ajustada(k):
-    """k trampas (indices 0..k-1, primero) y k conjuntos optimos disjuntos de k^k elementos (D-15)."""
-    m = k ** k
-    trampas = [[] for _ in range(k)]
-    optimos = [[] for _ in range(k)]
-    elem = 0
-    for i in range(k):
-        for j in range(k):
-            for _ in range(k ** (k - (j + 1)) * (k - 1) ** j):
-                trampas[j].append(elem)
-                optimos[i].append(elem)
-                elem += 1
-        for _ in range((k - 1) ** k):
-            optimos[i].append(elem)
-            elem += 1
-    assert all(len(o) == m for o in optimos)
-    W = np.zeros((2 * k, elem))
-    for j in range(k):
-        W[j, trampas[j]] = 1.0
-    for i in range(k):
-        W[k + i, optimos[i]] = 1.0
-    return W, np.ones(elem), m
-
-
 @pytest.mark.parametrize("k", [2, 3, 5])
 def test_instancia_ajustada_razon_exacta(k):
-    W, a, m = ajustada(k)
+    """Q-06: la instancia vive en src/ada_g2/generator.py; se usa directa (N=2k != M, sin cuadrar, tras BUG-1)."""
+    W, a, m = instancia_ajustada(k)
     n = 2 * k
-    W, a, c, mask = cuadrar(W, a, [1] * n)
+    assert W.shape == (n, k * m) and (W[k:].sum(axis=1) == m).all()   # k optimos disjuntos de m elementos
+    c, mask = [1] * n, np.ones(n, dtype=bool)
     res = seleccionar(W, a, c, mask, k, 10**6, "k").mejor
     assert sorted(res.S) == list(range(k)), "el voraz debe elegir las k trampas (desempate por indice)"
     ex = fuerza_bruta(W, a, c, list(range(n)), k, INF)
@@ -238,3 +217,11 @@ def test_conteo_evaluaciones_P_por_M(monkeypatch, n, k, m):
     assert sum(len(p.evaluados) for p in r.pasos) == P        # candidatos factibles evaluados = P
     assert len(llamadas) == k                                  # k matvec de N x M (incluye ya elegidos)
     assert sum(s[0] * s[1] for s in llamadas) == k * n_c * m_c >= P * m_c
+
+
+def test_cli_ajustada_sale_con_cero(capsys):
+    """Q-06: `python -m ada_g2 ajustada` reproduce la cota exacta y sale con 0."""
+    from ada_g2.cli import main
+    assert main(["ajustada", "--k", "2", "3"]) == 0
+    out = capsys.readouterr().out
+    assert "3/4" in out and "19/27" in out and "cota alcanzada exactamente" in out

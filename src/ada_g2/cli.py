@@ -65,6 +65,37 @@ def cmd_generar(args) -> int:
     return 0
 
 
+def cmd_ajustada(args) -> int:
+    """Para cada k: construye la instancia ajustada, corre voraz (modo k) y fuerza bruta e imprime la razon exacta.
+
+    0 si la razon observada es exactamente 1-(1-1/k)^k para todos los k; 3 si no.
+    """
+    from fractions import Fraction
+
+    import numpy as np
+
+    from .exact import fuerza_bruta
+    from .generator import instancia_ajustada
+    from .select import seleccionar
+
+    ok = True
+    print("k | N x M | voraz S | f(voraz) | f(optimo) | razon | 1-(1-1/k)^k")
+    for k in args.k:
+        if k ** (k + 1) > 10**7:
+            print(f"{k} | omitido (M = k^(k+1) = {k ** (k + 1)} demasiado grande)")
+            continue
+        W, a, _ = instancia_ajustada(k)
+        n = W.shape[0]
+        res = seleccionar(W, a, [1] * n, np.ones(n, dtype=bool), k, 10**9, "k").mejor
+        opt = fuerza_bruta(W, a, [1] * n, list(range(n)), k, float("inf"))
+        razon = Fraction(int(round(res.f)), int(round(opt.f)))
+        teo = 1 - (1 - Fraction(1, k)) ** k
+        ok &= razon == teo
+        print(f"{k} | {n} x {W.shape[1]} | {res.S} | {res.f:.0f} | {opt.f:.0f} | {razon} = {float(razon):.5f} | {teo}")
+    print("cota alcanzada exactamente" if ok else "FALLO: la razon no coincide con la cota")
+    return 0 if ok else 3
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="ada_g2", description="ADA 2026-B Grupo 2")
     sp = ap.add_subparsers(dest="cmd", required=True)
@@ -87,5 +118,8 @@ def main(argv=None) -> int:
     g.add_argument("--densidad", type=float, default=1.0)
     g.add_argument("--out", required=True)
     g.set_defaults(fn=cmd_generar)
+    aj = sp.add_parser("ajustada", help="instancia ajustada (D-15): muestra que la cota 1-(1-1/k)^k del voraz se alcanza")
+    aj.add_argument("--k", type=int, nargs="+", default=[2, 3, 5])
+    aj.set_defaults(fn=cmd_ajustada)
     args = ap.parse_args(argv)
     return args.fn(args)

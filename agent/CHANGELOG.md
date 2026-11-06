@@ -190,3 +190,27 @@
   - Tag `v0.1-primera-entrega`: NO creado, a propósito (se crea tras la compilación en letX y la confirmación de la portada).
 - **Commit:** pendiente (hash en la siguiente entrada)
 - **Siguiente paso:** el usuario compila `informe/` en letX y confirma la fecha de portada; después `git tag v0.1-primera-entrega` (T08).
+
+### C-0010 · 2026-11-05 22:45 · claude-opus-5.5 (orquestador), registro por scribe (claude-haiku-5.5) · tarea W3, Q-06, T08 (parcial), T07 (manual en LaTeX en curso)
+- **Tipo:** feat + docs
+- **Archivos:**
+  - M `src/ada_g2/generator.py` — añade `instancia_ajustada(k)`: familia general N=2k ≠ M, no expresable en el esquema JSON (D-15)
+  - M `src/ada_g2/cli.py` — subcomando `ajustada [--k 2 3 5]` (`cmd_ajustada`): voraz modo k frente a fuerza bruta, razón exacta con `Fraction`; exit 0 si coincide con 1−(1−1/k)^k, 3 si no
+  - M `tests/test_seleccion.py` — la prueba de la instancia ajustada usa la función del generador (sin `cuadrar()` ni constructor local); nueva prueba `test_cli_ajustada_sale_con_cero`
+  - M `README.md` — §6.1 (`ajustada`); §10 "Alcance: solución base frente a variantes" (variantes (a) y (b) parciales, (c) no desarrollada, T13 no desarrollada; errores conocidos: ninguno abierto); fila `tools/` en la estructura; manual en LaTeX
+  - M `informe/secciones/03_optimalidad_y_cota.tex`, M `informe/INFORME.md` — la instancia ajustada se cita como construida por `instancia_ajustada` y reproducible con `python -m ada_g2 ajustada`
+  - A `tools/leer_docs.py` — extrae texto de PDF y DOCX a `.txt` (pdfplumber, pypdf, python-docx)
+  - A `requirements-dev.txt` — pdfplumber 0.11.10, pypdf 6.21.4, python-docx (herramientas de lectura)
+  - A `informe/informe.pdf` — compilado por el usuario en letX (21 páginas). Revisado con pdfplumber: portada (Facultad de Inteligencia Artificial e Ingenierías; Manizales, 6 de noviembre de 2026), índice de las secciones 1-4, sin "??". Anterior al cambio de 03: hay que recompilarlo antes del tag
+  - M `.gitignore` — ignora `informe/*.zip` y `manual/*.zip`
+  - M `agent/DECISIONS.md` (Q-06 resuelta; D-30 marcada VERIFICADA por D-31; añade D-31 y D-32), `agent/TASKS.md` (W3 ✅; T07 🔄; T08 anotada), `agent/CONTEXT.md`, `agent/CHANGELOG.md`, `agent/log/auto_changes.log`
+  - Excluido a propósito: `manual/MANUAL_TECNICO.md` (M) y `manual/manual_tecnico.tex` (en curso, report-writer). Irán en una entrada posterior.
+- **Qué y por qué:** Q-06 resuelta por delegación del usuario: la instancia ajustada (D-15) entra en el generador, así la cota 1−(1−1/k)^k se reproduce con un comando y no solo con un test. El usuario pidió herramientas para leer las guías; con ellas se contrastó la estructura de README y manual (D-30 → D-31). El README declara la solución base frente a las variantes (guía §5).
+- **Verificación:**
+  - orquestador: `.venv/Scripts/python -m pytest -q` → 240 passed in 17.18s (scribe no lo re-ejecutó)
+  - orquestador: `python -m ada_g2 ajustada` con k=2,3,5 → 3/4, 19/27, 2101/3125; "cota alcanzada exactamente"; exit 0. Son las mismas fracciones que 6/8, 57/81, 10505/15625 de W3, sin reducir
+  - orquestador: pdfplumber sobre `informe/informe.pdf` (portada, índice 1-4, sin "??")
+  - scribe: `git status --short` y `git diff --stat` revisados; ningún archivo cambiado queda fuera de la lista salvo `manual/` (excluido a propósito)
+  - Sin verificar: compilación de `informe/main.tex` tras el cambio de 03; compilación de `manual/manual_tecnico.tex` (aún no existe; el usuario compila en letX)
+- **Commit:** pendiente (hash en C-0011). C-0009 quedó en `4376f41`.
+- **Siguiente paso:** el usuario recompila `informe/main.tex` en letX y sustituye `informe/informe.pdf`; luego compila `manual/manual_tecnico.tex`, sube ambos PDF al repo y solo entonces crea el tag `v0.1-primera-entrega`.

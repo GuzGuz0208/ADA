@@ -129,12 +129,25 @@ Caso ejemplo_n6: N=6 T=2 k=3 B=10 L=12 modo=ambos
 ```
 Código de salida: 0. Con un archivo inexistente (`--input noexiste.json`) la salida es `ERROR: no existe el archivo de entrada: noexiste.json` y el código es 2.
 
+### 6.1 Instancia ajustada de la cota del voraz (D-15)
+
+`python -m ada_g2 ajustada` construye la familia en la que el voraz de la Parte 2 logra **exactamente** 1 − (1 − 1/k)^k del óptimo, lo que muestra que la cota (≥ 1 − 1/e ≈ 0.632) no se puede mejorar para este algoritmo. Salida real:
+
+```
+k | N x M | voraz S | f(voraz) | f(optimo) | razon | 1-(1-1/k)^k
+2 | 4 x 8 | [0, 1] | 6 | 8 | 3/4 = 0.75000 | 3/4
+3 | 6 x 81 | [0, 1, 2] | 57 | 81 | 19/27 = 0.70370 | 19/27
+5 | 10 x 15625 | [0, 1, 2, 3, 4] | 10505 | 15625 | 2101/3125 = 0.67232 | 2101/3125
+cota alcanzada exactamente
+```
+Es de la familia general (N = 2k candidatos ≠ M objetivos), por eso no se expresa en el esquema JSON de la profesora; se construye en `src/ada_g2/generator.py::instancia_ajustada`.
+
 ## 7. Pruebas
 
 ```
 pytest -q
 ```
-Resultado en la verificación de esta entrega (Windows 11, Python 3.12.10): `239 passed` (tiempo de unos 16 s). Qué cubren: reparto del voraz = programación dinámica exacta; certificado de dualidad; monotonía y submodularidad de f; selección factible en los tres modos; razón voraz/exacto ≥ 1 − (1 − 1/k)^k en modo `k`; instancia ajustada de la cota; reducción de NP-dureza (ejemplo del informe, equivalencia en una subfamilia); caso de la profesora; validación de entradas inválidas (exit 2) y CLI. Detalle en `manual/MANUAL_TECNICO.md`, Sección 6.
+Resultado en la verificación de esta entrega (Windows 11, Python 3.12.10): `240 passed` (tiempo de unos 17 s). Qué cubren: reparto del voraz = programación dinámica exacta; certificado de dualidad; monotonía y submodularidad de f; selección factible en los tres modos; razón voraz/exacto ≥ 1 − (1 − 1/k)^k en modo `k`; instancia ajustada de la cota; reducción de NP-dureza (ejemplo del informe, equivalencia en una subfamilia); caso de la profesora; validación de entradas inválidas (exit 2) y CLI. Detalle en `manual/MANUAL_TECNICO.md`, Sección 6.
 
 ## 8. Estructura de carpetas
 
@@ -143,8 +156,9 @@ Resultado en la verificación de esta entrega (Windows 11, Python 3.12.10): `239
 | `src/ada_g2/` | código: `io.py`, `model.py`, `select.py`, `allocate.py`, `rounds.py`, `certificates.py`, `exact.py`, `generator.py`, `trace.py`, `cli.py` |
 | `tests/` | pruebas con pytest y hypothesis |
 | `results/` | salidas por caso (`caso_<nombre>/`: resultado, tiempo, traza) |
-| `informe/` | informe técnico en LaTeX (`main.tex`, `secciones/`, `referencias.tex`) y espejo `INFORME.md` |
-| `manual/` | `MANUAL_TECNICO.md` |
+| `informe/` | informe técnico en LaTeX (`main.tex`, `secciones/`, `referencias.tex`), PDF compilado `informe.pdf` y espejo `INFORME.md` |
+| `manual/` | manual técnico: `manual_tecnico.tex` (fuente LaTeX, PDF compilado en letX) y `MANUAL_TECNICO.md` (misma información en Markdown) |
+| `tools/` | utilidades de apoyo, no forman parte de la solución (`leer_docs.py`: extrae el texto de PDF/DOCX; requiere `requirements-dev.txt`) |
 | `project-docs/` | enunciados y JSON de la profesora (solo lectura) |
 | `agent/`, `prompts/` | memoria de trabajo de los agentes de IA y sus prompts (ver `AGENTS.md`) |
 | `docs/` | material de consulta local (no versionado) |
@@ -154,4 +168,20 @@ Resultado en la verificación de esta entrega (Windows 11, Python 3.12.10): `239
 - La Parte 2 es NP-difícil: el código es un algoritmo de aproximación; no hay garantía teórica con cupo y costo a la vez (R-01).
 - La fuerza bruta de referencia solo se ejecuta con N ≤ 20; la DP de referencia del reparto se omite si |S|·B² > 5·10⁷ (D-24).
 - El caso de la profesora satura f (R-02); la validación de la cota 1 − 1/e usa familias sintéticas.
-- Validación experimental por tamaños (T13) y la deducción completa de T(n) aún no entregadas. El informe se compila en letX (D-20); el PDF no se genera en este repositorio.
+- Validación experimental por tamaños (T13) y la deducción completa de T(n) aún no entregadas. El informe y el manual se compilan en letX (D-20); en el repositorio se guarda el PDF resultante.
+
+## 10. Alcance: solución base frente a variantes
+
+Esta versión (`v0.1-primera-entrega`) es la **solución base** de la primera entrega y **no es la solución final**.
+
+| Componente | Estado en esta versión |
+|---|---|
+| Parte 1, reparto voraz exacto con montículo y topes por nodo | implementado, probado contra DP exacta y certificado por dualidad |
+| Parte 2, selección voraz (modos `k`, `costo`, `ambos`), fuerza bruta de referencia y cota LP a posteriori | implementado y probado |
+| T rondas en cadena (Parte 2 → Parte 1) con topes que bajan entre rondas | implementado (q = 0 en el caso de la profesora, D-07) |
+| Variante (a), costos de participación con garantía demostrada (Khuller et al.) | **parcial**: hay mejor-de-3 (voraz, razón y mejor nodo único), pero sin garantía para cupo + costo (R-01) ni enumeración parcial |
+| Variante (b), fallas con probabilidad q y comparación de políticas con ≥ 100 semillas | **parcial**: `--q` y `--politica` existen; falta el experimento comparativo |
+| Variante (c), nodos relacionados (caso aditivo y caso competencia) | **no desarrollada** |
+| Validación experimental (≥ 5 tamaños, gráfica tiempo vs n contra T(n)) | **no desarrollada** (tarea T13) |
+
+**Errores conocidos:** ninguno abierto. BUG-1 (la selección fallaba con N ≠ M en la familia general) se corrigió y tiene prueba de regresión. El código de salida 3 no tiene prueba automática.

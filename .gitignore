@@ -26,3 +26,5 @@ desktop.ini
 
 # Configuración local de Claude Code
 .claude/settings.local.json
+informe/*.zip
+manual/*.zip

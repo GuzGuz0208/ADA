@@ -38,3 +38,40 @@ def generar(n: int, rondas: int = 3, k: int = 5, B: int = 30, L: int | None = No
                        "presupuesto_ruido_por_ronda_B": B, "presupuesto_costos_participacion_por_ronda": L},
         "grafo": grafo, "nodos": nodos,
     }
+
+
+def instancia_ajustada(k: int):
+    """Instancia ajustada de la cota del voraz (D-15, W3): familia general de cobertura 0/1 (M != N).
+
+    Pre: k >= 2 entero. Construye 2k candidatos sobre M = k * k^k objetivos con a_j = 1:
+      - candidatos 0..k-1 = "trampas": la trampa j cubre, en cada conjunto optimo, una capa de
+        k^(k-(j+1)) * (k-1)^j elementos;
+      - candidatos k..2k-1 = conjuntos optimos disjuntos de m = k^k elementos cada uno.
+    Con desempate por menor indice (D-12) y las trampas indexadas primero, el voraz con cupo k elige
+    las k trampas y obtiene k*m*(1-(1-1/k)^k), mientras el optimo (los k conjuntos optimos) vale k*m.
+    Pos: devuelve (W, a, m) con W in {0,1}^{2k x M}, a = unos(M); razon voraz/optimo = 1-(1-1/k)^k.
+    T = O(k * M) = O(k^(k+2)) para llenar W.
+    """
+    import numpy as np
+
+    if k < 2:
+        raise ValueError("k debe ser >= 2")
+    m = k ** k
+    trampas = [[] for _ in range(k)]
+    optimos = [[] for _ in range(k)]
+    elem = 0
+    for i in range(k):
+        for j in range(k):
+            for _ in range(k ** (k - (j + 1)) * (k - 1) ** j):
+                trampas[j].append(elem)
+                optimos[i].append(elem)
+                elem += 1
+        for _ in range((k - 1) ** k):
+            optimos[i].append(elem)
+            elem += 1
+    W = np.zeros((2 * k, elem))
+    for j in range(k):
+        W[j, trampas[j]] = 1.0
+    for i in range(k):
+        W[k + i, optimos[i]] = 1.0
+    return W, np.ones(elem), m
