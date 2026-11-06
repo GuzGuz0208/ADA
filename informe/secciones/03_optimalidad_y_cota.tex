@@ -1,0 +1,219 @@
+% ============================================================
+% Sección 3 — Resultados que la formalización referencia:
+%   T1 (optimalidad del voraz de la Parte 1, con topes) y costo O(N + B log N)
+%   T4/T5 (voraz de la Parte 2, tau = Theta(M), cota 1 - 1/e de NWF aplicada a nuestra f)
+% ============================================================
+\section{Algoritmos base: optimalidad, costo y garantía}\label{sec:algoritmos}
+
+\subsection{Parte 1: el voraz por ganancia marginal es óptimo}\label{sec:optimo}
+
+\begin{algorithm}[h]
+\caption{\textsc{Reparto} (voraz por ganancia marginal con montículo y topes)}\label{alg:reparto}
+\textbf{Forma/Tipo/Nombre:} E: entero $N$; E: arreglo real $a[1..N]$; E: arreglo entero $r[1..N]$; E: entero $B$; S: arreglo entero $x[1..N]$.
+\begin{algorithmic}[1]
+\Require $N\ge1$, $a_i>0$, $r_i\in\Nat$, $B\in\Nat$.
+\Ensure $\sum_i x_i\le B$, $0\le x_i\le r_i$ y $U(x)=\sum_i a_i\ln(1+x_i)$ es máxima entre los repartos factibles.
+\For{$i=1$ \textbf{hasta} $N$}
+  \State $x[i]\gets 0$
+\EndFor
+\State $H\gets$ arreglo vacío
+\For{$i=1$ \textbf{hasta} $N$}
+  \If{$r[i]>0$}
+    \State agregar el par $(g_i(0),\,i)$ al final de $H$
+  \EndIf
+\EndFor
+\State \textsc{ConstruirMontículoMáx}$(H)$ \Comment{orden: mayor $g$; empate, menor $i$ (D-12)}
+\State $b\gets 0$
+\While{$b<B$ \textbf{y} $H\neq\emptyset$}
+  \State $(g,i)\gets$ \textsc{ExtraerMáx}$(H)$
+  \State $x[i]\gets x[i]+1$;\ $b\gets b+1$
+  \If{$x[i]<r[i]$}
+    \State \textsc{Insertar}$(H,(g_i(x[i]),\,i))$
+  \EndIf
+\EndWhile
+\State \Return $x$
+\end{algorithmic}
+\end{algorithm}
+
+Notación: $x^{(j)}$ es el vector $x$ tras $j$ iteraciones del ciclo de la línea 9; $U(y)=\sum_iu_i(y_i)$; $e_p$ es el vector unitario del nodo $p$. Como $u_i(0)=0$, $U(y)=\sum_i\sum_{s=0}^{y_i-1}g_i(s)$.
+
+\begin{teorema}[optimalidad del voraz con topes; demostrado por nosotros]\label{teo:optimo}
+Si cada $u_i$ cumple $u_i(0)=0$ y su ganancia marginal $g_i$ es positiva y no creciente (por el Lema~\ref{lem:concava}, esto vale para $u_i=a_i\ln(1+x)$ con $a_i>0$), el Algoritmo~\ref{alg:reparto} termina tras $J=\min(B,\sum_ir_i)$ iteraciones y devuelve un reparto óptimo de la Definición~\ref{def:reparto}.
+\end{teorema}
+\begin{proof}
+Se demuestra con un \textbf{invariante de lazo} para el ciclo de la línea 9 y un \textbf{argumento de intercambio} en el mantenimiento. Existe al menos un óptimo porque el conjunto de repartos factibles es finito ($0\le y_i\le r_i$) y no vacío ($y=0$).
+
+\emph{Invariante} $\mathcal{I}(j)$, antes de la iteración $j+1$:
+(a) $x^{(j)}$ es factible y $b=\sum_ix_i^{(j)}=j$;
+(b) $H$ contiene exactamente los nodos $i$ con $x_i^{(j)}<r_i$, cada uno una sola vez y con clave $g_i(x_i^{(j)})$;
+(c) existe un reparto óptimo $y$ con $y\ge x^{(j)}$ componente a componente.
+
+\textbf{Inicialización} ($j=0$). (a) $x^{(0)}=0$, factible, $b=0$. (b) Las líneas 4–6 insertan exactamente los $i$ con $r_i>0=x_i^{(0)}$, con clave $g_i(0)$, y la línea 7 solo reordena. (c) Todo óptimo $y$ cumple $y\ge0=x^{(0)}$.
+
+\textbf{Mantenimiento.} Supongamos $\mathcal{I}(j-1)$ y que se ejecuta la iteración $j$ (luego $j\le B$ y $H\ne\emptyset$). Abreviamos $x=x^{(j-1)}$. Sea $p$ el nodo extraído en la línea 10.
+\begin{enumerate}[label=(\arabic*)]
+\item Por (b), $p$ cumple $x_p<r_p$ y $g_p(x_p)=\max\{g_i(x_i): x_i<r_i\}$ (propiedad de \textsc{ExtraerMáx}). Tras las líneas 11–13, $x^{(j)}=x+e_p$, que es factible porque $x_p+1\le r_p$ y $\sum_i x^{(j)}_i=j\le B$: se cumple (a). Si $x_p+1<r_p$, $p$ se reinserta con clave $g_p(x_p+1)$; si no, queda fuera; los demás nodos no cambian: se cumple (b).
+\item Para (c), sea $y$ el óptimo dado por $\mathcal{I}(j-1)$, con $y\ge x$. \emph{Caso A}: $y_p>x_p$. Entonces $y\ge x+e_p=x^{(j)}$ y el mismo $y$ sirve.
+\item \emph{Caso B}: $y_p=x_p$. Primero, $\sum_iy_i=B$: si fuera $\sum_iy_i<B$, el vector $y+e_p$ sería factible ($y_p+1=x_p+1\le r_p$) y $U(y+e_p)-U(y)=g_p(y_p)>0$ (hipótesis $g_p>0$), lo que contradice la optimalidad de $y$.
+\item Como $\sum_iy_i=B\ge j>j-1=\sum_ix_i$ e $y\ge x$, existe $q$ con $y_q>x_q$; y $q\ne p$ porque $y_p=x_p$.
+\item \emph{$q$ era candidato en la iteración $j$}: $x_q<y_q\le r_q$, así que $q\in H$ por (b), y por (1) $g_q(x_q)\le g_p(x_p)$.
+\item Sea $y'=y-e_q+e_p$. Es factible: $\sum_iy'_i=\sum_iy_i\le B$; $y'_p=x_p+1\le r_p$; $y'_q=y_q-1\ge x_q\ge 0$.
+\item $U(y')-U(y)=g_p(y_p)-g_q(y_q-1)=g_p(x_p)-g_q(y_q-1)$. Como $y_q-1\ge x_q$ y $g_q$ es no creciente (concavidad), $g_q(y_q-1)\le g_q(x_q)\le g_p(x_p)$ por (5). Luego $U(y')\ge U(y)$, y como $y$ es óptimo, $y'$ también lo es.
+\item $y'\ge x^{(j)}$: $y'_p=x_p+1=x^{(j)}_p$, $y'_q=y_q-1\ge x_q=x^{(j)}_q$ y las demás componentes no cambian. Se cumple (c).
+\end{enumerate}
+
+\textbf{Terminación.} Cada iteración aumenta $b$ en 1 y disminuye en 1 la cantidad $\sum_i(r_i-x_i)\ge0$, así que el ciclo termina; por (a) y (b), sale cuando $b=B$ o cuando $H=\emptyset$, es decir, cuando $x_i=r_i$ para todo $i$; en ambos casos $J=\min(B,\sum_ir_i)$. Sea $y\ge x^{(J)}$ el óptimo dado por (c).
+Si $b=B$: $\sum_iy_i\le B=\sum_ix_i^{(J)}$ e $y\ge x^{(J)}$ obligan a $y=x^{(J)}$.
+Si $H=\emptyset$: $x_i^{(J)}=r_i\ge y_i\ge x_i^{(J)}$, luego $y=x^{(J)}$.
+En ambos casos $x^{(J)}$ es óptimo.
+\end{proof}
+
+\begin{observacion}[dónde se usa cada hipótesis]\label{obs:gcero}
+\textbf{Concavidad} ($g$ no creciente): en el paso (7). \textbf{$g>0$}: solo en el paso (3); si $g\ge0$ (p.\ ej.\ $a_i=0$), $y+e_p$ también es óptimo y cumple $y+e_p\ge x^{(j)}$, así que el teorema sigue valiendo. \textbf{Topes}: el paso (5) es el único punto delicado que añaden: hay que comprobar que $q$ todavía estaba en el montículo, y eso lo garantiza $y_q\le r_q$. \textbf{Desempates}: no se usan; cualquier regla de desempate da un óptimo (D-12 solo fija cuál).
+\end{observacion}
+
+\begin{contraejemplo}[sin concavidad el voraz falla]
+Dos nodos, $B=2$, sin topes, con ganancias marginales $g_1=(1,10)$ (convexa: la segunda unidad vale más) y $g_2=(2,1)$. Voraz: paso 1, $\max\{g_1(0),g_2(0)\}=\max\{1,2\}$, elige el nodo 2; paso 2, $\max\{g_1(0),g_2(1)\}=\max\{1,1\}$, empate, elige el nodo 1 (menor índice). Utilidad $2+1=3$. Óptimo: $x=(2,0)$ con utilidad $1+10=11$. El paso (7) falla porque $g_1(1)>g_1(0)$.
+\end{contraejemplo}
+
+\begin{observacion}[prueba alternativa por ``las $B$ mayores ganancias'']
+$U(x)=\sum_i\sum_{s<x_i}g_i(s)$: todo reparto factible toma, de cada nodo, un \emph{prefijo} de su lista $g_i(0)\ge g_i(1)\ge\dots\ge g_i(r_i-1)$, y en total a lo sumo $B$ elementos del multiconjunto $G=\{g_i(s):i\in S,\ 0\le s<r_i\}$. Como todos son positivos, $U(x)\le$ suma de los $\min(B,|G|)$ mayores de $G$. Como cada lista está ordenada de mayor a menor, el máximo de $G$ entre lo no tomado es siempre la cabeza de alguna lista, que es lo que extrae el voraz; así toma exactamente los $\min(B,|G|)$ mayores y alcanza la cota.
+\end{observacion}
+
+\subsubsection{Costo del Algoritmo~\ref{alg:reparto}}\label{sec:costoP1}
+Sea $N'=|\{i:r_i>0\}|\le N$ y $J=\min(B,\sum_ir_i)\le B$. Por el invariante (b), cada nodo está a lo sumo una vez en $H$, así que $|H|\le N'\le N$ siempre. Costos del montículo binario (Notas de clase §3.1 \cite{notas}; \cite[cap.~6]{clrs}): construir con \textsc{Heapify} de abajo hacia arriba cuesta $O(|H|)$; \textsc{ExtraerMáx} e \textsc{Insertar} cuestan $O(1+\log|H|)$. Se asume costo unitario para las operaciones aritméticas reales, incluido $\ln$ (D-13).
+
+\begin{center}
+\small
+\begin{tabular}{@{}cllc@{}}
+\toprule
+Línea & Instrucción & Ejecuciones & Costo por ejecución\\
+\midrule
+1 & \texttt{para} $i$ (cabeza) & $N+1$ & $c_1$\\
+2 & $x[i]\gets0$ & $N$ & $c_2$\\
+3 & $H\gets\emptyset$ & $1$ & $c_3$\\
+4 & \texttt{para} $i$ (cabeza) & $N+1$ & $c_4$\\
+5 & \texttt{si} $r[i]>0$ & $N$ & $c_5$\\
+6 & agregar $(g_i(0),i)$ & $N'$ & $c_6$\\
+7 & \textsc{ConstruirMontículoMáx} & $1$ & $\le c_7N'$\\
+8 & $b\gets0$ & $1$ & $c_8$\\
+9 & \texttt{mientras} (cabeza) & $J+1$ & $c_9$\\
+10 & \textsc{ExtraerMáx} & $J$ & $\le c_{10}(1+\log N)$\\
+11 & incrementos & $J$ & $c_{11}$\\
+12 & \texttt{si} $x[i]<r[i]$ & $J$ & $c_{12}$\\
+13 & \textsc{Insertar} & $\le J$ & $\le c_{13}(1+\log N)$\\
+14 & devolver & $1$ & $c_{14}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Sumando: $T(N,B)\le(c_1+c_2+c_4+c_5+c_6+c_7)N+(c_9+c_{11}+c_{12})J+(c_{10}+c_{13})J(1+\log N)+c$, y con $J\le B$:
+\[
+T(N,B)\le \alpha N+\beta B(1+\log N)+\gamma\ \Longrightarrow\ T(N,B)\in O(N+B\log N).
+\]
+\textbf{Mejor caso} ($B=0$ o todos los $r_i=0$): $J=0$ y $T_{\text{mejor}}\in\Theta(N)$. \textbf{Peor caso}: $J=B$ (topes holgados) y un montículo de tamaño $\Theta(N)$; el término $B\log N$ es una cota superior de las operaciones de montículo. \textbf{Espacio}: $S(N)\in\Theta(N)$ (arreglos $x$, $a$, $r$ y $H$). La deducción formal completa, con las constantes del código final, es la tarea T10.
+
+\paragraph{Pseudo-polinomialidad.} La entrada ocupa $\Theta(N\beta+\log B)$ bits, pero el número de iteraciones $J$ puede ser $B=2^{\log B}$: el algoritmo es polinomial en $N$ y en el \emph{valor} de $B$, pero exponencial en la longitud de $B$. Por ejemplo, duplicar la longitud en bits de $B$ (de $\log B$ a $2\log B$) eleva $B$ al cuadrado y con él el número de iteraciones.
+
+\begin{observacion}[presupuesto continuo, \emph{water-filling}; esbozo, la deducción completa es T11]\label{obs:waterfilling}
+Si $x_i\in[0,r_i]$ es real, el problema $\max\sum_ia_i\ln(1+x_i)$, $\sum_ix_i\le B$, es cóncavo con restricciones lineales y sus condiciones de Karush–Kuhn–Tucker son suficientes. Igualando la derivada $a_i/(1+x_i)$ a un multiplicador común $\lambda$ se obtiene $x_i(\lambda)=\min\{r_i,\max\{0,\,a_i/\lambda-1\}\}$. Si $\sum_ir_i\le B$, la solución es $x=r$; si no, $\lambda>0$ se elige con $\sum_ix_i(\lambda)=B$. La función $\lambda\mapsto\sum_ix_i(\lambda)$ es continua, no creciente y lineal a trozos en $1/\lambda$, con $2N$ puntos de quiebre ($\lambda=a_i$ y $\lambda=a_i/(1+r_i)$): ordenarlos y recorrerlos cuesta $O(N\log N)$, \textbf{independiente de $B$}. Así el caso continuo elimina el factor pseudo-polinomial. El nombre viene de ``llenar con agua'' recipientes de fondo $1/a_i$ hasta el mismo nivel $1/\lambda$.
+\end{observacion}
+
+% ------------------------------------------------------------
+\subsection{Parte 2: voraz de mayor ganancia marginal y su costo}\label{sec:costoP2}
+
+\begin{algorithm}[h]
+\caption{\textsc{VorazSelección} (modo \texttt{k}, con $R_j$ incremental)}\label{alg:voraz}
+\textbf{Forma/Tipo/Nombre:} E: enteros $N,M,k$; E: arreglo real $a[1..M]$; E: matriz real $w[1..N][1..M]$; S: conjunto $S$.
+\begin{algorithmic}[1]
+\Require $1\le k<N$, $a_j\ge0$, $w_{ij}\in[0,1]$.
+\Ensure $|S|=k$ y $S$ es la salida del voraz de mayor ganancia marginal (desempate por menor índice).
+\For{$j=1$ \textbf{hasta} $M$}
+  \State $R[j]\gets 1$
+\EndFor
+\State $S\gets\emptyset$;\ $enS[1..N]\gets$ falso
+\For{$t=1$ \textbf{hasta} $k$}
+  \State $g_{\max}\gets-\infty$;\ $mejor\gets 0$
+  \For{$i=1$ \textbf{hasta} $N$}
+    \If{\textbf{no} $enS[i]$}
+      \State $d\gets 0$
+      \For{$j=1$ \textbf{hasta} $M$}
+        \State $d\gets d+a[j]\cdot w[i][j]\cdot R[j]$
+      \EndFor
+      \If{$d>g_{\max}$}
+        \State $g_{\max}\gets d$;\ $mejor\gets i$
+      \EndIf
+    \EndIf
+  \EndFor
+  \State $S\gets S\cup\{mejor\}$;\ $enS[mejor]\gets$ verdadero
+  \For{$j=1$ \textbf{hasta} $M$}
+    \State $R[j]\gets R[j]\cdot(1-w[mejor][j])$
+  \EndFor
+\EndFor
+\State \Return $S$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Correctitud (invariante).} Antes de la iteración $t$ del ciclo de la línea 4: $|S|=t-1$ y $R[j]=\prod_{l\in S}(1-w_{lj})$ para todo $j$. Inicialización: $S=\emptyset$, $R\equiv1$ (producto vacío). Mantenimiento: las líneas 6–12 calculan, para cada $i\notin S$, $d=\sum_ja_jw_{ij}R_j=\Delta(i\mid S)$ por~\eqref{eq:delta}, y guardan el primero de mayor valor (``$>$'' estricto = menor índice); siempre hay candidato porque quedan $N-t+1\ge2$ nodos fuera de $S$ y $d\ge0>-\infty$; las líneas 13–15 agregan $mejor$ y multiplican $R_j$ por $(1-w_{mejor,j})$, lo que restablece el invariante para $S\cup\{mejor\}$. Terminación: tras $k$ iteraciones, $|S|=k$.
+
+\paragraph{Costo, de adentro hacia afuera.} Sea $P$ el número de veces que se ejecuta la línea 8 (candidatos evaluados): en la iteración $t$ hay $N-(t-1)$ nodos fuera de $S$, luego
+\[
+P=\sum_{t=1}^{k}(N-t+1)=kN-\frac{k(k-1)}{2}.
+\]
+Como $k\le N-1$, $\frac{k(k-1)}{2}<\frac{kN}{2}$, así que $\frac{kN}{2}<P\le kN$, es decir $P\in\Theta(kN)$.
+\begin{center}
+\small
+\begin{tabular}{@{}cllc@{}}
+\toprule
+Línea & Instrucción & Ejecuciones & Subtotal\\
+\midrule
+1–2 & inicializar $R$ & $(M+1)+M$ & $\Theta(M)$\\
+3 & inicializar $S$, $enS$ & $1$ & $\Theta(N)$\\
+4 & \texttt{para} $t$ (cabeza) & $k+1$ & $\Theta(k)$\\
+5 & $g_{\max}$, $mejor$ & $k$ & $\Theta(k)$\\
+6–7 & \texttt{para} $i$ (cabeza), \texttt{si no} $enS[i]$ & $k(N+1)+kN$ & $\Theta(kN)$\\
+8 & $d\gets0$ & $P$ & $\Theta(kN)$\\
+9–10 & \texttt{para} $j$ (cabeza) y acumulación & $P(M+1)+PM$ & $\Theta(kNM)$\\
+11–12 & comparar y actualizar & $\le 2P$ & $O(kN)$\\
+13 & agregar $mejor$ & $k$ & $\Theta(k)$\\
+14–15 & actualizar $R$ & $k(M+1)+kM$ & $\Theta(kM)$\\
+\bottomrule
+\end{tabular}
+\end{center}
+El término dominante es la línea 10, ejecutada exactamente $P\cdot M$ veces: $T(N,k,M)\in\Theta(k\cdot N\cdot M)$. Una evaluación de ganancia marginal (líneas 8–10) cuesta $\tau=\Theta(M)$, de acuerdo con la forma $O(N\cdot k\cdot\tau)$ del enunciado. \textbf{En el JSON} ($M=N$): $T(N,k)\in\Theta(k\,N^2)$. Espacio: $\Theta(NM)$ por la matriz $W$ (entrada) y $\Theta(N+M)$ adicional.
+
+\paragraph{Fuerza bruta (referencia exacta).} Enumera los $\sum_{r=0}^{k}\binom{N}{r}$ subconjuntos de tamaño $\le k$ y evalúa cada uno en $O(rM)$: $T_{\text{fb}}\in O\bigl(kM\sum_{r\le k}\binom{N}{r}\bigr)$; para $k\le N/2$, $\binom{N}{r}$ crece con $r$ y $\sum_{r\le k}\binom{N}{r}\le(k+1)\binom{N}{k}$, exponencial en $N$ si $k$ es proporcional a $N$. En el modo \texttt{k} basta con los de tamaño exactamente $k$ (Observación~\ref{obs:exactok}).
+
+% ------------------------------------------------------------
+\subsection{Cota $1-1/e$ del voraz (modo \texttt{k})}\label{sec:cota}
+
+\begin{teorema}[Nemhauser, Wolsey y Fisher, 1978 \cite{nwf1978}; la prueba que sigue es el argumento estándar, escrito por nosotros]\label{teo:nwf}
+Hipótesis: (H1) $f:2^V\to\Rea$ con $f(\emptyset)=0$; (H2) $f$ monótona; (H3) $f$ submodular; (H4) la restricción es solo de cardinalidad, $|S|\le k$, con $1\le k\le N$. Sea $S_k$ la salida del voraz que, en $k$ pasos, agrega un elemento de máxima ganancia marginal (cualquier desempate) y sea $\OPT=\max\{f(S):|S|\le k\}$. Entonces
+\[
+f(S_k)\ \ge\ \Bigl[1-\Bigl(1-\frac1k\Bigr)^{k}\Bigr]\OPT\ \ge\ \Bigl(1-\frac1e\Bigr)\OPT\approx0.632\,\OPT.
+\]
+\end{teorema}
+\begin{proof}
+Sea $O$ un óptimo, $|O|\le k$; $S_t$ el conjunto del voraz tras $t$ pasos; $\delta_t=\OPT-f(S_t)$.
+\begin{enumerate}[label=(\arabic*)]
+\item $\OPT=f(O)\le f(O\cup S_t)$, por (H2).
+\item Sea $O\setminus S_t=\{o_1,\dots,o_r\}$, $r\le k$. Telescópica: $f(O\cup S_t)-f(S_t)=\sum_{m=1}^{r}\Delta(o_m\mid S_t\cup\{o_1,\dots,o_{m-1}\})\le\sum_{m=1}^{r}\Delta(o_m\mid S_t)$, por (H3) (cada $o_m\notin S_t\cup\{o_1,..,o_{m-1}\}\supseteq S_t$).
+\item Cada $o_m\notin S_t$ era candidato en el paso $t+1$, así que $\Delta(o_m\mid S_t)\le f(S_{t+1})-f(S_t)$ (elección voraz). Por (H2) esa diferencia es $\ge0$, luego $r\cdot(\cdot)\le k\cdot(\cdot)$.
+\item De (1)–(3): $\OPT\le f(S_t)+k\,[f(S_{t+1})-f(S_t)]$, que se reescribe $\delta_{t+1}\le(1-\frac1k)\,\delta_t$.
+\item $\delta_0=\OPT-f(\emptyset)=\OPT$ por (H1). Iterando $k$ veces: $\delta_k\le(1-\frac1k)^k\OPT$, es decir $f(S_k)\ge[1-(1-\frac1k)^k]\OPT$.
+\item Como $1-z\le e^{-z}$ para todo $z$, $(1-\frac1k)^k\le e^{-1}$.
+\end{enumerate}
+\end{proof}
+
+\paragraph{Aplicación a nuestra $f$ (modo \texttt{k}).} (H1)–(H3) son el Lema~\ref{lem:submodular} (con $a_j>0$ y $w_{ij}\in[0,1]$, que el programa valida); (H4) es la restricción del modo \texttt{k}; el voraz de la Sección~\ref{sec:costoP2} hace exactamente $k$ pasos de máxima ganancia (posible porque $k<N$). Por tanto \textbf{el Algoritmo~\ref{alg:voraz} garantiza $f(S)\ge(1-1/e)\OPT$ en el modo \texttt{k}}. La verificación empírica contra fuerza bruta (familias sintéticas, porque la instancia de la profesora se satura, R-02) va en \textbf{[RESULTADO-T12]}; la razón observada en el caso de la profesora, en \RES.
+
+\begin{observacion}[qué pasa si falla cada hipótesis]
+\textbf{(H1)}: si $f(\emptyset)=c>0$, el mismo argumento da la cota para $f-c$, no para $f$. \textbf{(H3)}: con $V=\{1,2,3\}$, $f(S)=10\cdot\mathbf{1}[\{1,2\}\subseteq S]+\mathbf{1}[3\in S]$ (monótona, no submodular: $\Delta(2\mid\emptyset)=0<10=\Delta(2\mid\{1\})$) y $k=2$, el voraz elige 3 (ganancia 1) y luego 1 (ganancia 0): $f=1$, mientras $\OPT=f(\{1,2\})=10$; razón $0.1<0.632$. \textbf{(H4)}: con un presupuesto de costos la cota no aplica; con dos elementos de cobertura disjunta, $f(\{1\})=2$, $c_1=1$ y $f(\{2\})=L$, $c_2=L$ (con $L\ge3$), el voraz por razón ganancia/costo elige 1 (razón $2>1$) y ya no cabe 2: obtiene $2$ frente a $\OPT=L$, razón $2/L\to0$. Por esto la variante con costos usa el mejor entre el voraz por razón y el mejor nodo individual \cite{kmn1999}, y \textbf{para el modo \texttt{ambos} (cupo y costo a la vez) no afirmamos ninguna garantía teórica} (R-01): se mide la razón contra el exacto (\RES).
+\end{observacion}
+
+\begin{contraejemplo}[el voraz no es óptimo en la Parte 2]
+$U=\{1,\dots,6\}$, $S_1=\{1,2,3,4\}$, $S_2=\{1,2,5\}$, $S_3=\{3,4,6\}$, $k=2$, con la $f$ de cobertura de la reducción. Paso 1: ganancias $4,3,3$, elige $S_1$. Paso 2: $\Delta(S_2\mid\{S_1\})=|\{5\}|=1$ y $\Delta(S_3\mid\{S_1\})=|\{6\}|=1$; empate, elige $S_2$. Voraz: $f=5$. Óptimo: $S_2\cup S_3=U$, $f=6$. Razón $5/6\approx0.833\ge1-(1-\frac12)^2=0.75$, como garantiza el Teorema~\ref{teo:nwf}. El voraz de la Parte 2 es aproximado, no exacto; el de la Parte 1 sí es exacto (Teorema~\ref{teo:optimo}).
+\end{contraejemplo}
+
+\begin{observacion}[no se puede mejorar en general]
+Feige \cite{feige1998} demostró que, para Cobertura Máxima, ningún algoritmo polinomial garantiza una razón $1-1/e+\varepsilon$ para ningún $\varepsilon>0$, salvo que P$=$NP (verificado a nivel de resumen de la publicación). Como Cobertura Máxima es un caso particular de nuestra Parte 2 (Lema~\ref{lem:cobertura}), la cota del voraz es, en ese sentido, la mejor posible para algoritmos polinomiales.
+\end{observacion}

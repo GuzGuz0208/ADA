@@ -1,0 +1,157 @@
+% ============================================================
+% Sección 1 — Formalización (Parte 1 y Parte 2 por separado)
+% ============================================================
+\section{Formalización del problema}\label{sec:formalizacion}
+
+\subsection{Contexto general}
+Una red de $N$ nodos entrena colaborativamente un modelo durante $T$ rondas sin compartir datos crudos. Cada actualización se protege con ruido calibrado: más ruido protege más pero reduce la utilidad de la actualización. Cada nodo dispone de un presupuesto total de ``ruido tolerable'' para todo el proyecto y, en cada ronda, el sistema toma dos decisiones \cite{enunciado}:
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{qué nodos participan} (Parte 2, selección de participantes), y
+\item \textbf{cuánto presupuesto recibe cada participante} (Parte 1, reparto del presupuesto).
+\end{enumerate}
+Siguiendo la Figura 3.1 del enunciado, las dos partes se resuelven \emph{en cadena} dentro de cada ronda: primero se elige el conjunto $S_t$ y luego se reparte el presupuesto de la ronda entre los nodos de $S_t$ (D-08). Cada parte es un problema de optimización distinto, con su propio tamaño de entrada, y se formaliza por separado.
+
+\subsection{Datos comunes y esquema de la instancia}\label{sec:datos}
+La profesora entrega instancias en JSON con el esquema de \texttt{entrada\_G2\_red\_15\_nodos.json} y puede ejecutar \emph{otras} instancias con el mismo esquema; por eso ningún valor de la instancia se fija en el código. El esquema contiene:
+\begin{itemize}[leftmargin=*]
+\item \texttt{parametros}: número de nodos $N$, número de rondas $T$, cupo por ronda $k$, presupuesto de ruido por ronda $B$, presupuesto de costos de participación por ronda $L$.
+\item \texttt{nodos}: para cada nodo $i$, \texttt{coeficiente\_utilidad} $a_i>0$, \texttt{presupuesto\_total\_nodo} $R_i\in\Nat$ y \texttt{costo\_participacion} $c_i\in\Nat$.
+\item \texttt{grafo}: aristas $\{u,v\}$ con \texttt{peso\_influencia} $w_{uv}\in[0,1]$.
+\end{itemize}
+En la instancia de la profesora, $N=15$, $T=3$, $k=5$, $B=30$, $L=24$ y el grafo trae $105=\binom{15}{2}$ aristas, cada par una sola vez. Los resultados obtenidos sobre esa instancia se reportan en \RES.
+
+\paragraph{Lo que el enunciado no fija.} Ningún documento del Subproyecto 2 define la forma de $u_i$, la forma de $f$ ni la probabilidad de falla $q$; el enunciado pide ``precisar $\tau$ para la función de utilidad que el equipo implemente''. Las elecciones de modelado están en la Tabla~\ref{tab:supuestos} (D-01, D-02, D-07).
+
+% ------------------------------------------------------------
+\subsection{Parte 1 — Reparto óptimo del presupuesto}\label{sec:p1}
+
+\paragraph{Contexto y decisión.} Dado el conjunto de nodos que ya participan en la ronda, se decide cuántas unidades enteras de presupuesto de ruido recibe cada uno para maximizar la utilidad total de la ronda.
+
+\paragraph{Función de utilidad (D-01).} Para cada nodo $i$,
+\[
+u_i(x)=a_i\ln(1+x),\qquad x\in\Nat,\ a_i>0,
+\]
+con ganancia marginal
+\[
+g_i(x)=u_i(x+1)-u_i(x)=a_i\ln\frac{x+2}{x+1}=a_i\ln\Bigl(1+\frac{1}{x+1}\Bigr).
+\]
+
+\begin{lema}[$u_i$ es creciente y cóncava sobre $\Nat$; demostrado por nosotros]\label{lem:concava}
+Si $a_i>0$, entonces $g_i(x)>0$ para todo $x\in\Nat$ y $g_i$ es estrictamente decreciente. En consecuencia $u_i$ es estrictamente creciente y cóncava en el sentido discreto del enunciado (cada unidad adicional aporta una ganancia no mayor que la anterior), y $u_i(0)=0$.
+\end{lema}
+\begin{proof}
+(1) Sea $z(x)=1/(x+1)$. Para $x\in\Nat$, $z(x)\in(0,1]$ y $z$ es estrictamente decreciente.
+(2) La función $\ln(1+z)$ es estrictamente creciente en $z$ y vale $0$ en $z=0$; luego $\ln(1+z(x))>0$ y $x\mapsto \ln(1+z(x))$ es estrictamente decreciente (composición de creciente con decreciente).
+(3) Multiplicar por $a_i>0$ conserva el signo y el orden, así que $g_i(x)>0$ y $g_i(x+1)<g_i(x)$.
+(4) $g_i>0$ significa $u_i(x+1)>u_i(x)$ (creciente) y $g_i$ decreciente es exactamente la concavidad discreta pedida. Por último $u_i(0)=a_i\ln 1=0$.
+\end{proof}
+\begin{observacion}
+Si algún $a_i=0$ (fuera del esquema, que exige $a_i>0$), $g_i\equiv 0$: $u_i$ sigue siendo cóncava y no decreciente, y el Teorema~\ref{teo:optimo} sigue valiendo (ver Observación~\ref{obs:gcero}). Si $a_i<0$, $u_i$ es decreciente y el nodo nunca debería recibir presupuesto; el programa debe rechazar esa entrada.
+\end{observacion}
+
+\begin{definicion}[Problema \textsc{Reparto}]\label{def:reparto}
+\leavevmode
+\begin{itemize}[leftmargin=*]
+\item \textbf{Entrada.} Un conjunto $S$ de $N$ nodos participantes (en la cadena, $S=S_t$ y $N=|S_t|\le k$); para cada $i\in S$, el coeficiente $a_i>0$ y el tope $r_i\in\Nat$ (presupuesto restante del nodo, D-06: $r_i=R_i$ en la ronda 1 y $r_i=R_i-\sum_{s<t}x_{i,s}$ en la ronda $t$); el presupuesto de la ronda $B\in\Nat$.
+\item \textbf{Salida.} Un vector $x=(x_i)_{i\in S}\in\Nat^{N}$ (unidades asignadas a cada nodo).
+\item \textbf{Restricciones.} $\sum_{i\in S}x_i\le B$ y $0\le x_i\le r_i$ para todo $i\in S$.
+\item \textbf{Objetivo.} Maximizar $U(x)=\sum_{i\in S}u_i(x_i)$.
+\end{itemize}
+\end{definicion}
+
+\begin{observacion}[relación con la Definición 3.2.1 del enunciado]
+El enunciado no incluye topes por nodo. Con $r_i\ge B$ para todo $i$ el tope nunca es activo y se recupera exactamente la Definición 3.2.1. Los topes se añaden porque el JSON trae \texttt{presupuesto\_total\_nodo} y el escenario dice que ese presupuesto es total para las $T$ rondas; se comprueba en \RES{} si llegan a ser activos en la instancia de la profesora.
+\end{observacion}
+
+\paragraph{Tamaño de la entrada: $(N,B)$.} Crecen dos magnitudes independientes:
+\begin{itemize}[leftmargin=*]
+\item $N$, el número de nodos a repartir: determina cuántos números $(a_i,r_i)$ se leen y el tamaño del montículo;
+\item $B$, el número de unidades a repartir: determina cuántas decisiones unitarias toma el voraz.
+\end{itemize}
+No se reduce a una sola variable porque el costo del algoritmo (Sección~\ref{sec:costoP1}) depende de ambas de forma distinta: $O(N+B\log N)$. Si se mide en bits, la entrada ocupa $\Theta(N\beta+\log B)$ bits ($\beta$ = bits por coeficiente y tope), de modo que $B$ entra en la longitud solo con $\log B$ bits; un costo lineal en $B$ es, por tanto, \textbf{pseudo-polinomial}: polinomial en el \emph{valor} de $B$, exponencial en su longitud ($B=2^{\log B}$). Es el mismo fenómeno que en la mochila 0/1 por programación dinámica \cite{enunciado}.
+
+\paragraph{Supuestos específicos.} Presupuesto en unidades enteras (D-13); los nodos no interactúan (la utilidad total es separable; el caso con grafo es una variante, P2); aritmética real de costo unitario, incluido $\ln$ (en el código, \texttt{float64} con tolerancia $10^{-9}$ en comparaciones de prueba, D-13); desempates por menor índice (D-12).
+
+\paragraph{Alcance.} Algoritmo exacto voraz por ganancia marginal (Algoritmo~\ref{alg:reparto}), su optimalidad (Teorema~\ref{teo:optimo}) y su costo. Por exigencia del enunciado, no se usa fuerza bruta ni metaheurísticas; la programación dinámica exacta solo se usa en las pruebas como referencia independiente. El caso continuo (\emph{water-filling}) se discute en la Observación~\ref{obs:waterfilling}.
+
+% ------------------------------------------------------------
+\subsection{Parte 2 — Selección de participantes}\label{sec:p2}
+
+\paragraph{Contexto y decisión.} Entre los nodos candidatos de la ronda se elige un subconjunto de participantes que maximice una utilidad conjunta en la que los aportes se \emph{solapan}: dos nodos muy influyentes sobre los mismos vecinos aportan menos juntos que la suma de sus aportes por separado.
+
+\paragraph{Función de utilidad conjunta (D-02).} Familia general: un conjunto de $N$ \emph{candidatos} $V=[N]$, un conjunto de $M$ \emph{objetivos} $[M]$ con pesos $a_j\ge 0$, y una matriz de influencias $W=(w_{ij})\in[0,1]^{N\times M}$. Para $S\subseteq V$,
+\[
+f(S)=\sum_{j=1}^{M}a_j\Bigl[1-\prod_{i\in S}(1-w_{ij})\Bigr],\qquad f(\emptyset)=0 .
+\]
+Interpretación: $w_{ij}$ es la probabilidad de que el candidato $i$ ``cubra'' (influya en) el objetivo $j$, de forma independiente; $f(S)$ es el peso esperado de objetivos cubiertos. \textbf{En el JSON}, candidatos y objetivos son los mismos $N$ nodos ($M=N$), $a_j$ es el \texttt{coeficiente\_utilidad}, $w_{ij}=w_{ji}=$ \texttt{peso\_influencia} (grafo no dirigido, D-10) y $w_{ii}=1$ (un nodo elegido se cubre a sí mismo); los pares ausentes del grafo tienen $w_{ij}=0$.
+
+\paragraph{Ganancia marginal.} Para $S\subseteq V$ e $i\notin S$, sea $R_j(S)=\prod_{l\in S}(1-w_{lj})\in[0,1]$. Entonces
+\begin{equation}\label{eq:delta}
+\Delta(i\mid S):=f(S\cup\{i\})-f(S)=\sum_{j=1}^{M}a_j\bigl[R_j(S)-R_j(S)(1-w_{ij})\bigr]=\sum_{j=1}^{M}a_j\,w_{ij}\,R_j(S).
+\end{equation}
+\textbf{Cuidado:} la fórmula~\eqref{eq:delta} solo vale para $i\notin S$. Si $i\in S$, $\Delta(i\mid S)=0$ pero la expresión de la derecha da $\sum_j a_j w_{ij}(1-w_{ij})\prod_{l\in S\setminus\{i\}}(1-w_{lj})$, que en general no es cero. El código debe excluir los ya elegidos.
+
+\begin{lema}[propiedades de $f$; demostrado por nosotros]\label{lem:submodular}
+Si $a_j\ge 0$ y $w_{ij}\in[0,1]$ para todo $i,j$, entonces:
+(i) $f(\emptyset)=0$; (ii) $f$ es monótona: $S\subseteq T\Rightarrow f(S)\le f(T)$; (iii) $f$ es submodular: para $S\subseteq T\subseteq V$ e $i\in V\setminus T$, $\Delta(i\mid S)\ge \Delta(i\mid T)$.
+\end{lema}
+\begin{proof}
+(1) \emph{(i)}: el producto vacío vale 1, luego cada término es $a_j(1-1)=0$.
+(2) \emph{(ii)}: por~\eqref{eq:delta}, $\Delta(i\mid S)$ es suma de productos de factores no negativos ($a_j\ge0$, $w_{ij}\ge0$, $R_j(S)\ge 0$ porque cada $1-w_{lj}\in[0,1]$); luego $\Delta(i\mid S)\ge 0$. Si $S\subseteq T$, se agregan los elementos de $T\setminus S$ uno a uno y cada paso no disminuye $f$.
+(3) \emph{(iii)}: si $S\subseteq T$, $R_j(T)=R_j(S)\cdot\prod_{l\in T\setminus S}(1-w_{lj})\le R_j(S)$, porque el producto adicional está en $[0,1]$ y $R_j(S)\ge0$. Multiplicando por $a_jw_{ij}\ge 0$ y sumando sobre $j$, usando~\eqref{eq:delta} (válida porque $i\notin T\supseteq S$): $\Delta(i\mid T)\le\Delta(i\mid S)$.
+\end{proof}
+\begin{observacion}
+Las hipótesis $a_j\ge 0$ y $w_{ij}\in[0,1]$ son necesarias: si $w_{ij}>1$, el factor $1-w_{ij}$ es negativo y $R_j$ puede cambiar de signo; si $a_j<0$, $f$ puede decrecer. El programa valida ambas al cargar el JSON.
+\end{observacion}
+
+\begin{definicion}[Problema \textsc{Selección}]\label{def:seleccion}
+\leavevmode
+\begin{itemize}[leftmargin=*]
+\item \textbf{Entrada.} $N$ candidatos, $M$ objetivos (en el JSON, $M=N$), pesos $a\in\Rea_{\ge0}^{M}$, matriz $W\in[0,1]^{N\times M}$, cupo $k\in\Nat$ con $1\le k<N$, costos $c_i\in\Nat$ y presupuesto de costos $L\in\Nat$.
+\item \textbf{Salida.} Un subconjunto $S\subseteq V$ (los participantes de la ronda).
+\item \textbf{Restricciones} según el modo (D-03): modo \texttt{k}: $|S|\le k$; modo \texttt{costo}: $\sum_{i\in S}c_i\le L$; modo \texttt{ambos} (el de la solución base): $|S|\le k$ \textbf{y} $\sum_{i\in S}c_i\le L$.
+\item \textbf{Objetivo.} Maximizar $f(S)$.
+\end{itemize}
+\end{definicion}
+
+\begin{observacion}[``tamaño $k$'' frente a ``a lo sumo $k$'']\label{obs:exactok}
+El enunciado pide ``el subconjunto de tamaño $k$''. En el modo \texttt{k} ambas lecturas tienen el mismo valor óptimo: si $|S|<k<N$, se completa $S$ con nodos cualesquiera hasta tamaño $k$ y, por monotonía (Lema~\ref{lem:submodular}), $f$ no baja. En los modos con costo \emph{no} son equivalentes (completar puede violar $\sum c_i\le L$), por eso se usa ``a lo sumo $k$''.
+\end{observacion}
+
+\paragraph{Tamaño de la entrada: $(N,k)$, y además $M$ y $L$.} Crecen: $N$ (candidatos), $k$ (cuántos se eligen; determina el número de pasos del voraz y el número $\binom{N}{k}$ de subconjuntos de la fuerza bruta), $M$ (objetivos; determina el costo $\tau$ de evaluar una ganancia marginal) y, en los modos con costo, $L$. En el JSON $M=N$, así que el tamaño relevante es $(N,k)$ (más $L$ en los modos \texttt{costo}/\texttt{ambos}). La matriz $W$ ocupa $N\cdot M$ números, de modo que leer la entrada ya cuesta $\Theta(NM)$.
+
+\paragraph{Costo de una evaluación ($\tau$).} El enunciado expresa el voraz como $O(N\cdot k\cdot\tau)$, con $\tau$ el costo de evaluar una ganancia marginal. Manteniendo el vector $R_j=R_j(S)$ (inicial $R_j=1$; tras elegir $i$, $R_j\leftarrow R_j(1-w_{ij})$ en $O(M)$), la fórmula~\eqref{eq:delta} da $\tau=\Theta(M)$, y el voraz cuesta $\Theta(k\cdot N\cdot M)$, es decir $\Theta(kN^2)$ con $M=N$ (deducción en la Sección~\ref{sec:costoP2}). Evaluar $f(S)$ desde cero costaría $O(|S|\cdot M)$ y llevaría a $O(N k^2 M)$; por eso se usa la versión incremental.
+
+\paragraph{Supuestos específicos.} Grafo no dirigido y simétrico (D-10; la dirección no está especificada, Q-04); independencia de las influencias (modelo de cobertura probabilística, D-02); $q=0$ para el caso de la profesora (D-07); desempates por menor índice (D-12). En una ronda $t$ los candidatos son los nodos que no fallaron (con $q=0$, todos).
+
+\paragraph{Alcance.} Esta parte es NP-difícil (Sección~\ref{sec:np}); se resuelve con el voraz de mayor ganancia marginal, con garantía $1-1/e$ \emph{solo en el modo} \texttt{k} (Sección~\ref{sec:cota}), y con fuerza bruta en instancias pequeñas para medir la razón real. Para el modo \texttt{ambos} se usa el mejor de tres voraces factibles (por ganancia, por razón ganancia/costo y el mejor nodo individual) y \textbf{no se afirma garantía teórica} para la combinación cupo+costo (R-01); la calidad se mide contra el exacto por fuerza bruta (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos) y se reporta en \RES.
+
+% ------------------------------------------------------------
+\subsection{Supuestos de modelado y alcance de la entrega}\label{sec:supuestos}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{1.1cm}p{9.2cm}p{4.2cm}@{}}
+\toprule
+ID & Supuesto & Dónde se usa\\
+\midrule
+D-01 & $u_i(x)=a_i\ln(1+x)$, $x\in\Nat$, $a_i=$ \texttt{coeficiente\_utilidad} & Parte 1, Lema~\ref{lem:concava}\\
+D-02 & $f(S)=\sum_j a_j[1-\prod_{i\in S}(1-w_{ij})]$, $w_{ii}=1$; familia general $N\times M$ & Parte 2, Lema~\ref{lem:submodular}, reducción\\
+D-03 & Base con cupo \textbf{y} costo a la vez ($|S|\le k$, $\sum c_i\le L$); modos \texttt{k} y \texttt{costo} por bandera & Def.~\ref{def:seleccion}\\
+D-04 & Alcance: primera entrega y extras si alcanza (P0$\to$P1$\to$P2) & Toda la entrega\\
+D-05 & Python $\ge$ 3.10; numpy, scipy, matplotlib; pytest + hypothesis & Implementación\\
+D-06 & Topes por nodo $r_i=R_i-$ gastado en rondas previas & Def.~\ref{def:reparto}\\
+D-07 & $q=0$ en el caso de la profesora; barrido de $q$ como extra & Rondas\\
+D-08 & Partes resueltas en cadena por ronda (Parte 2 $\to$ Parte 1) & Contexto\\
+D-10 & Grafo no dirigido y simétrico & $W$\\
+D-11 & Tiempos con \texttt{perf\_counter}, mediana de $\ge5$ repeticiones, semilla 20261105 & Validación\\
+D-12 & Desempates por menor índice de nodo & Ambos voraces\\
+D-13 & $\ln$ natural; $B$ y costos enteros; \texttt{float64} con tolerancia $10^{-9}$ en pruebas & Ambas partes\\
+\bottomrule
+\end{tabular}
+\caption{Supuestos de modelado (D-09 fija el formato del informe; no afecta al modelo).}\label{tab:supuestos}
+\end{table}
+
+\paragraph{Qué cubre esta primera entrega.} Formalización de ambas partes, prueba de NP-dureza de la Parte 2, optimalidad del voraz de la Parte 1 (Teorema~\ref{teo:optimo}), aplicación de la cota $1-1/e$ a nuestra $f$ (Teorema~\ref{teo:nwf}) y ejecución de la solución base sobre los casos de la profesora (\RES).
+\paragraph{Qué queda para entregas posteriores.} Deducción completa de $T(n)$ con todas las constantes y validación experimental con $\ge5$ tamaños (P1); variantes obligatorias: costos con la versión de Khuller et al.\ \cite{kmn1999}, $T$ rondas con fallas y políticas de gasto, y nodos relacionados (P2).

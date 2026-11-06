@@ -113,3 +113,26 @@
   - Sin verificar: pruebas de propiedades con hypothesis; W1 y W2 sobre ≥500 instancias (T05, verifier); W3 razones exactas; reproducción en otra máquina.
 - **Commit:** pendiente (lo anota la siguiente entrada)
 - **Siguiente paso:** `verifier` T05: crear `tests/test_propiedades.py` con hypothesis y ejecutar `.venv\Scripts\python -m pytest -q`.
+
+### C-0007 · 2026-11-05 22:13 · theorist (claude-opus-5.5), orquestado por claude-opus-5.5; registro por scribe (claude-haiku-5.5) · tarea T01, T02, T03 (y avances T10, T11)
+- **Tipo:** docs
+- **Archivos:**
+  - A `informe/main.tex` — preámbulo estándar (babel spanish con es-nodecimaldot/es-noshorthands), portada, índice, convenciones
+  - A `informe/secciones/01_formalizacion.tex` — T02: Parte 1 y Parte 2 por separado; tamaños (N,B) y (N,k)(+M,L); lemas de concavidad de u_i y monotonía/submodularidad de f; tabla D-01…D-13
+  - A `informe/secciones/02_np_dureza.tex` — T03: CobMax NP-completo desde Set Cover; Sel-Dec ∈ NP; transformación φ con costeo Θ(N·|U|); equivalencia ⇒/⇐; ejemplo 4×5 con k=2; dureza de la subfamilia del JSON (W simétrica, w_ii=1); corolarios para modos costo/ambos; dureza fuerte
+  - A `informe/secciones/03_optimalidad_y_cota.tex` — T1 optimalidad del reparto con topes por intercambio e invariante de lazo; costeo O(N+B log N); pseudo-polinomial; water-filling en esbozo; voraz de selección Θ(kNM); Nemhauser–Wolsey–Fisher con cota 1−(1−1/k)^k y prueba propia; contraejemplos
+  - A `informe/referencias.tex` — bibliografía con marcas [VERIFICAR]
+  - A `informe/INFORME.md` — espejo Markdown (manda el LaTeX)
+  - M `agent/SPEC.md` — §4-5: 11 correcciones (ver abajo)
+  - M `agent/DECISIONS.md` — A D-26…D-29; D-21 anotada como confirmada por theorist (misma regla, no duplicada)
+  - M `agent/TASKS.md` — T01 ✅, T02 ✅, T03 ✅ (verificación del verifier pendiente), T10 🔄, T11 🔄
+  - M `agent/CONTEXT.md` — estado, siguiente paso, pendientes del usuario (portada), testigo
+  - M `agent/log/auto_changes.log` — traza automática de Write/Edit
+- **Correcciones a SPEC (T01):** (1) el ciclo del reparto es "mientras b<B y el montículo no esté vacío", J=min(B,Σr_i), T=O(N+J log N); si Σr_i≤B, x=r; (2) hipótesis a_j≥0, w_ij∈[0,1]; (3) la fórmula de Δ vale solo para i∉S; (4) "a lo sumo k"; (5) el voraz del modo ambos salta a los candidatos que no caben; (6) Σ_{r=1..5} C(15,r)=4 943 sin ∅ (4 944 con ∅); (7) propuesta de candidatos en rondas (= D-21); (8) T1: cuatro huecos cerrados (q sigue en el montículo, j≤B, terminación por topes, g≥0); (9) T3: la cita pasa a Prop. 4.3.1 del enunciado + Karp 1972, más k≥N, NP con racionales, dureza de la subfamilia, modos con costo, dureza fuerte; (10) T4: cota exacta 1−(1−1/k)^k, solo modo k; (11) T5: Θ(kNM).
+- **Qué y por qué:** primer bloque del informe de la primera entrega (P0). Las decisiones nuevas D-26…D-29 se registran aquí porque los textos del informe y de SPEC dependen de ellas. Citas: NWF 1978 y Feige 1998 (solo nivel resumen, R-04) y Khuller–Moss–Naor 1999 (solo mencionada); no se afirma garantía para cupo+costo (R-01).
+- **Corrección de referencias de commit (sin editar entradas previas):** la entrada C-0005 quedó en el commit `35db17c`, no en `5054456` (que contiene C-0001…C-0004). C-0006 quedó en `5f98f59`. Se corrigió `agent/CONTEXT.md`.
+- **Verificación:**
+  - Ejecutado por el scribe: `git status --short --untracked-files=all` (6 archivos nuevos en `informe/`, M `agent/SPEC.md`, M `agent/log/auto_changes.log`; `tests/` con `test_smoke.py` y `__pycache__`, sin tocar y fuera de este commit); `git diff --stat`; `git log --oneline`; hora con zoneinfo.
+  - Sin verificar: compilación LaTeX (no hay TeX local; D-20); `pytest -q` en este bloque (no ejecutado; `tests/` lo escribe el verifier); verificación de T03 (instancia 4×5 a mano y por código, pendiente del verifier); cifras `[RESULTADO-T06]` y cota `[RESULTADO-T12]` sin rellenar a propósito (vienen del código).
+- **Commit:** pendiente (ver `git log`; el hash lo anota la siguiente entrada)
+- **Siguiente paso:** `verifier`: cuando termine `tests/test_propiedades.py`, ejecutar `.venv\Scripts\python -m pytest -q` y verificar la instancia 4×5 de `informe/secciones/02_np_dureza.tex` contra `src/ada_g2/select.py`; luego `implementer` (T06) para llenar `[RESULTADO-T06]`.

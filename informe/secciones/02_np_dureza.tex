@@ -1,0 +1,205 @@
+% ============================================================
+% Sección 2 — NP-dureza de la Parte 2 (reducción desde Cobertura Máxima)
+% ============================================================
+\section{NP-dureza de la selección de participantes}\label{sec:np}
+
+\paragraph{Plan.} (1) Se fija el problema de origen, Cobertura Máxima, y se justifica que es NP-completo. (2) Se define la versión de decisión de nuestra Parte 2 (\textsc{Sel-Dec}) y se prueba que está en NP. (3) Se construye una transformación polinomial $\varphi$ de instancias de Cobertura Máxima a instancias de \textsc{Sel-Dec} y se calcula su costo. (4) Se prueba la equivalencia de respuestas en \emph{ambos} sentidos. (5) Se trabaja un ejemplo a mano. (6) Se refuerza el resultado para la subfamilia que realmente aparece en el JSON. (7) Se concluye qué componente es NP-difícil.
+
+\subsection{Problema de origen: Cobertura Máxima}
+
+\begin{definicion}[\textsc{CobMax-Dec}]
+\textbf{Instancia:} un universo finito $U=[m]$, una colección $S_1,\dots,S_n\subseteq U$ y enteros $k,t\ge 0$. \textbf{Pregunta:} ¿existe $I\subseteq[n]$ con $|I|\le k$ y $\bigl|\bigcup_{i\in I}S_i\bigr|\ge t$?
+\end{definicion}
+
+\begin{definicion}[\textsc{CobConj-Dec}, Cobertura de Conjuntos]
+\textbf{Instancia:} $U=[m]$, $S_1,\dots,S_n\subseteq U$, entero $k$. \textbf{Pregunta:} ¿existe $I\subseteq[n]$, $|I|\le k$, con $\bigcup_{i\in I}S_i=U$?
+\end{definicion}
+
+\begin{lema}[\textsc{CobMax-Dec} es NP-completo]\label{lem:cobmax}
+\end{lema}
+\begin{proof}
+(1) \emph{Pertenece a NP}: el certificado es $I$; se verifica $|I|\le k$ y se calcula la unión con un arreglo de $m$ banderas en $O(m+\sum_{i\in I}|S_i|)\subseteq O(nm)$.
+(2) \emph{Es NP-difícil}: \textsc{CobConj-Dec} es NP-completo; es uno de los 21 problemas de Karp \cite{karp1972} (\emph{Set Covering}) y el enunciado del curso lo usa como conocido (Proposición 4.3.1 de \cite{enunciado}). Dada una instancia $(U,\{S_i\},k)$ de \textsc{CobConj-Dec}, se produce $(U,\{S_i\},k,t=m)$ de \textsc{CobMax-Dec} en tiempo lineal en el tamaño de la entrada. Como toda unión está contenida en $U$, $|\bigcup_{i\in I}S_i|\ge m \iff \bigcup_{i\in I}S_i=U$; por tanto las respuestas coinciden para cada $I$ y, en particular, una instancia es positiva si y solo si la otra lo es.
+\end{proof}
+
+\subsection{Versión de decisión de la Parte 2 y pertenencia a NP}
+
+\begin{definicion}[\textsc{Sel-Dec}]\label{def:seldec}
+\textbf{Instancia:} enteros $N\ge 2$, $M\ge1$; pesos racionales $a_j\ge0$ ($j\in[M]$); matriz racional $W\in([0,1]\cap\Q)^{N\times M}$; enteros $k$ con $1\le k<N$; umbral racional $t$. \textbf{Pregunta:} ¿existe $A\subseteq[N]$ con $|A|\le k$ y $f(A)\ge t$, donde $f(A)=\sum_{j}a_j[1-\prod_{i\in A}(1-w_{ij})]$?
+\end{definicion}
+Esta es la versión de decisión del modo \texttt{k} de la Definición~\ref{def:seleccion}. Se usan datos racionales para que la entrada tenga longitud finita en bits; el JSON trae decimales finitos, que son racionales.
+
+\begin{proposicion}[\textsc{Sel-Dec} $\in$ NP; demostrado por nosotros]\label{prop:np}
+\end{proposicion}
+\begin{proof}
+(1) \emph{Certificado}: el conjunto $A$, de tamaño $\le k<N$, codificado con $O(N\log N)$ bits.
+(2) \emph{Verificador}: comprueba $|A|\le k$ en $O(N)$ y calcula $f(A)$ con aritmética racional exacta: para cada $j$, el producto de $|A|$ factores $(1-w_{ij})$; en total $O(|A|\cdot M)\subseteq O(NM)$ operaciones aritméticas; luego compara con $t$.
+(3) \emph{Polinomialidad en bits}: el producto de $|A|$ racionales tiene numerador y denominador con a lo sumo la suma de las longitudes de los factores, es decir, $O(|A|\cdot\ell)$ bits si cada $w_{ij}$ ocupa $\ell$ bits; cada suma y producto de racionales de esa longitud cuesta tiempo polinomial en ella. Por tanto el verificador es polinomial en la longitud de la instancia.
+(4) $A$ es aceptado si y solo si es testigo de una respuesta positiva, así que \textsc{Sel-Dec} $\in$ NP.
+\end{proof}
+
+\subsection{La transformación $\varphi$ y su costo}
+
+Sea $(U=[m],S_1,\dots,S_n,k,t)$ una instancia de \textsc{CobMax-Dec}, con cada $S_i$ dado como lista de elementos de $[m]$.
+
+\paragraph{Caso borde ($k\ge n$).} \textsc{Sel-Dec} exige $k<N$ (Definición 3.3.1 del enunciado: $k<N$). Si $k\ge n$, la instancia de origen se decide directamente: es positiva si y solo si $|\bigcup_{i=1}^{n}S_i|\ge t$ (tomar todos los conjuntos es lo mejor, porque la unión es monótona), lo cual se calcula en $O(nm)$. Según la respuesta, $\varphi$ devuelve una instancia fija de \textsc{Sel-Dec}: positiva $Y_0$ ($N=2$, $M=1$, $a_1=1$, $w_{11}=w_{21}=0$, $k=1$, $t=0$; la respuesta es sí con $A=\emptyset$, pues $f(\emptyset)=0\ge 0$) o negativa $N_0$ (los mismos datos con $t=1$; como todos los $w$ son $0$, $f\equiv 0<1$).
+
+\paragraph{Caso general ($k<n$).} $\varphi$ produce:
+\begin{itemize}[leftmargin=*]
+\item \textbf{candidatos}: un nodo $i$ por conjunto $S_i$, $N:=n$;
+\item \textbf{objetivos}: uno por elemento del universo, $M:=m$, con $a_j:=1$;
+\item \textbf{influencias}: $w_{ij}:=1$ si $j\in S_i$ y $w_{ij}:=0$ si $j\notin S_i$;
+\item \textbf{mismo cupo y mismo umbral}: $k$ y $t$; sin costos (modo \texttt{k}).
+\end{itemize}
+
+\begin{algorithm}[h]
+\caption{Transformación $\varphi$ (caso $k<n$)}\label{alg:phi}
+\textbf{Forma/Tipo/Nombre:} E: entero $n$, entero $m$, listas $S_1..S_n$ de enteros en $[m]$, enteros $k,t$; S: entero $N$, entero $M$, arreglo real $a[1..M]$, matriz real $w[1..N][1..M]$, enteros $k,t$.
+\begin{algorithmic}[1]
+\Require $k<n$, cada $S_i\subseteq[m]$.
+\Ensure $(N,M,a,w,k,t)$ es la instancia de \textsc{Sel-Dec} descrita arriba.
+\For{$i=1$ \textbf{hasta} $n$}
+  \For{$j=1$ \textbf{hasta} $m$}
+    \State $w[i][j]\gets 0$
+  \EndFor
+  \For{\textbf{cada} $e\in S_i$}
+    \State $w[i][e]\gets 1$
+  \EndFor
+\EndFor
+\For{$j=1$ \textbf{hasta} $m$}
+  \State $a[j]\gets 1$
+\EndFor
+\State \Return $(n,m,a,w,k,t)$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}clcc@{}}
+\toprule
+Línea & Instrucción & Ejecuciones & Subtotal\\
+\midrule
+1 & \texttt{para} $i$ (cabeza) & $n+1$ & $c_1(n+1)$\\
+2 & \texttt{para} $j$ (cabeza) & $n(m+1)$ & $c_2\,n(m+1)$\\
+3 & $w[i][j]\gets0$ & $nm$ & $c_3\,nm$\\
+4 & \texttt{para cada} $e\in S_i$ (cabeza) & $\sum_i(|S_i|+1)\le n(m+1)$ & $\le c_4\,n(m+1)$\\
+5 & $w[i][e]\gets 1$ & $\sum_i|S_i|\le nm$ & $\le c_5\,nm$\\
+6 & \texttt{para} $j$ (cabeza) & $m+1$ & $c_6(m+1)$\\
+7 & $a[j]\gets 1$ & $m$ & $c_7\,m$\\
+8 & devolver & 1 & $c_8$\\
+\bottomrule
+\end{tabular}
+\caption{Costeo de $\varphi$ (cabeza de ciclo = cuerpo $+1$). Se usó $\sum_i|S_i|\le nm$ porque cada $S_i\subseteq[m]$.}\label{tab:costophi}
+\end{table}
+Sumando de adentro hacia afuera: $T_\varphi(n,m)\le \alpha\,nm+\beta\,n+\gamma\,m+\delta$ para constantes $\alpha,\beta,\gamma,\delta>0$, y como la línea 3 se ejecuta exactamente $nm$ veces, $T_\varphi(n,m)\in\Theta(n\cdot m)=\Theta(N\cdot|U|)$. Con el caso borde ($O(nm)$) el costo total sigue en $O(N\cdot|U|)$: \textbf{la transformación es polinomial}. Además la instancia producida tiene tamaño $\Theta(nm)$ números de un bit más $k$ y $t$, polinomial en el tamaño de la de origen.
+
+\subsection{Equivalencia de respuestas}
+
+\begin{lema}[la utilidad construida es la cobertura; demostrado por nosotros]\label{lem:cobertura}
+En la instancia $\varphi(U,\{S_i\},k,t)$ con $k<n$, para todo $A\subseteq[n]$: $f(A)=\bigl|\bigcup_{i\in A}S_i\bigr|$.
+\end{lema}
+\begin{proof}
+(1) Fijo $j\in[m]$. Cada factor $1-w_{ij}$ vale $0$ si $j\in S_i$ y $1$ si $j\notin S_i$ (definición de $w$).
+(2) Un producto de factores en $\{0,1\}$ vale $0$ si y solo si algún factor es $0$. Luego $\prod_{i\in A}(1-w_{ij})=0 \iff \exists i\in A: j\in S_i \iff j\in\bigcup_{i\in A}S_i$ (si $A=\emptyset$ el producto vacío es $1$ y la unión vacía no contiene a $j$: también coincide).
+(3) Por (2), $1-\prod_{i\in A}(1-w_{ij})=\mathbf{1}[j\in\bigcup_{i\in A}S_i]$.
+(4) Con $a_j=1$: $f(A)=\sum_{j=1}^{m}\mathbf{1}[j\in\bigcup_{i\in A}S_i]=\bigl|\bigcup_{i\in A}S_i\bigr|$.
+\end{proof}
+
+\begin{teorema}[equivalencia; demostrado por nosotros]\label{teo:equiv}
+Para toda instancia $X=(U,\{S_i\}_{i=1}^n,k,t)$ de \textsc{CobMax-Dec}: $X$ es positiva $\iff$ $\varphi(X)$ es positiva para \textsc{Sel-Dec}.
+\end{teorema}
+\begin{proof}
+\emph{Caso $k\ge n$.} Por construcción, $\varphi(X)=Y_0$ (positiva) exactamente cuando $|\bigcup_{i=1}^nS_i|\ge t$, que es exactamente cuando $X$ es positiva (tomar $I=[n]$, $|I|=n\le k$, maximiza la unión). En otro caso $\varphi(X)=N_0$ (negativa) y $X$ es negativa.
+
+\emph{Caso $k<n$.} Se identifica el candidato $i$ con el conjunto $S_i$.
+
+($\Rightarrow$) Supongamos $X$ positiva: existe $I\subseteq[n]$ con $|I|\le k$ y $|\bigcup_{i\in I}S_i|\ge t$.
+\begin{enumerate}[label=(\arabic*)]
+\item Sea $A:=I\subseteq[n]=[N]$. Entonces $|A|=|I|\le k$.
+\item Por el Lema~\ref{lem:cobertura}, $f(A)=|\bigcup_{i\in I}S_i|\ge t$.
+\item Luego $A$ es testigo de que $\varphi(X)$ es positiva.
+\end{enumerate}
+
+($\Leftarrow$) Supongamos $\varphi(X)$ positiva: existe $A\subseteq[N]=[n]$ con $|A|\le k$ y $f(A)\ge t$.
+\begin{enumerate}[label=(\arabic*)]
+\item Sea $I:=A$. Entonces $|I|\le k$.
+\item Por el Lema~\ref{lem:cobertura}, $|\bigcup_{i\in I}S_i|=f(A)\ge t$.
+\item Luego $I$ es testigo de que $X$ es positiva.
+\end{enumerate}
+Los dos sentidos usan la misma correspondencia $I\leftrightarrow A$ y el mismo Lema~\ref{lem:cobertura}; no hay saltos: el valor de la función objetivo es \emph{idéntico} en ambos lados para cada subconjunto.
+\end{proof}
+
+\begin{corolario}[demostrado por nosotros a partir del Lema~\ref{lem:cobmax}]\label{cor:npc}
+\textsc{Sel-Dec} es NP-completo; en particular, es NP-difícil.
+\end{corolario}
+\begin{proof}
+Por el Lema~\ref{lem:cobmax}, \textsc{CobMax-Dec} es NP-difícil. $\varphi$ es computable en tiempo $O(N\cdot|U|)$ (Tabla~\ref{tab:costophi}) y preserva respuestas (Teorema~\ref{teo:equiv}): \textsc{CobMax-Dec} $\le_p$ \textsc{Sel-Dec}. Una reducción polinomial desde un problema NP-difícil hace NP-difícil al destino. Con la Proposición~\ref{prop:np}, \textsc{Sel-Dec} es NP-completo.
+\end{proof}
+
+\subsection{Ejemplo trabajado a mano}\label{sec:ejemplo}
+\begin{ejemplo}\label{ej:reduccion}
+$U=\{1,2,3,4,5\}$, $S_1=\{1,2,3\}$, $S_2=\{3,4\}$, $S_3=\{4,5\}$, $S_4=\{1,5\}$, $k=2$, $t=5$. Como $k=2<n=4$, se aplica el caso general: $N=4$, $M=5$, $a=(1,1,1,1,1)$ y
+\[
+W=\begin{pmatrix}
+1&1&1&0&0\\
+0&0&1&1&0\\
+0&0&0&1&1\\
+1&0&0&0&1
+\end{pmatrix}\quad(\text{fila } i=S_i,\ \text{columna } j=\text{elemento}).
+\]
+\textbf{Cálculo de $f$ con la fórmula} para $A=\{1,3\}$: los productos por columna $\prod_{i\in A}(1-w_{ij})$ son
+$j{=}1{:}\,(1-1)(1-0)=0$; $j{=}2{:}\,(0)(1)=0$; $j{=}3{:}\,(0)(1)=0$; $j{=}4{:}\,(1)(0)=0$; $j{=}5{:}\,(1)(0)=0$. Luego $f(\{1,3\})=5\cdot(1-0)=5\ge t$. Para $A=\{1,2\}$: la columna 5 da $(1-0)(1-0)=1$ y las demás $0$, así que $f(\{1,2\})=4$.
+
+\begin{center}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+$A$ & $\bigcup_{i\in A}S_i$ & $|\bigcup|$ & $f(A)$ por la fórmula\\
+\midrule
+$\{1,2\}$ & $\{1,2,3,4\}$ & 4 & 4\\
+$\{1,3\}$ & $\{1,2,3,4,5\}$ & 5 & 5\\
+$\{1,4\}$ & $\{1,2,3,5\}$ & 4 & 4\\
+$\{2,3\}$ & $\{3,4,5\}$ & 3 & 3\\
+$\{2,4\}$ & $\{1,3,4,5\}$ & 4 & 4\\
+$\{3,4\}$ & $\{1,4,5\}$ & 3 & 3\\
+\bottomrule
+\end{tabular}
+\end{center}
+($\Rightarrow$) $I=\{1,3\}$ cubre $U$ ($|\bigcup|=5\ge5$) y $A=\{1,3\}$ da $f(A)=5\ge 5$. ($\Leftarrow$) El único $A$ con $|A|\le2$ y $f(A)\ge 5$ es $\{1,3\}$ (los de tamaño 1 valen $|S_i|\le 3$), y corresponde a $I=\{1,3\}$. Ambas instancias son positivas.
+
+\textbf{Instancia negativa:} mismos conjuntos, $k=1$, $t=4$. Ningún conjunto tiene 4 elementos ($|S_i|\le3$) y, en $\varphi$, $f(\{i\})=|S_i|\le 3<4$. Ambas son negativas.
+\end{ejemplo}
+
+\subsection{Refuerzo: la dureza se mantiene en la subfamilia del JSON}\label{sec:refuerzo}
+La instancia de la profesora tiene una estructura particular: candidatos y objetivos son los mismos nodos ($M=N$), $W$ es simétrica, $w_{ii}=1$ y $a_j>0$. La reducción anterior produce $W$ rectangular y no simétrica, así que alguien podría objetar que la subfamilia que de verdad resolvemos podría ser fácil. No lo es:
+
+\begin{proposicion}[demostrado por nosotros]\label{prop:refuerzo}
+\textsc{Sel-Dec} sigue siendo NP-completo restringido a instancias con $M=N$, $W$ simétrica con $w_{ij}\in\{0,1\}$, $w_{ii}=1$ y $a_j>0$.
+\end{proposicion}
+\begin{proof}
+Sea $X=(U,\{S_i\}_{i=1}^n,k,t)$ de \textsc{CobMax-Dec} con $k<n$ (el caso $k\ge n$ se trata como antes, con instancias fijas que también cumplen la restricción: p.\ ej.\ $N=2$, $W=I_2$, $a=(1,1)$, $k=1$, $t=0$ o $t=3$).
+\begin{enumerate}[label=(\arabic*)]
+\item \emph{Limpieza.} Sea $U'=\bigcup_{i=1}^nS_i$, $m'=|U'|$. Los elementos de $U\setminus U'$ no los cubre ningún conjunto, así que $|\bigcup_{i\in I}S_i|$ no cambia al quitarlos: $X$ y $X'=(U',\{S_i\},k,t)$ tienen la misma respuesta. Costo $O(nm)$.
+\item \emph{Construcción.} Grafo bipartito con vértices $s_1,\dots,s_n$ (conjuntos) y $e_1,\dots,e_{m'}$ (elementos); $N=M=n+m'$. $w=1$ en la diagonal; $w_{s_i e_j}=w_{e_j s_i}=1$ si $j\in S_i$; $0$ en otro caso. $W$ es simétrica con diagonal 1. Pesos $a(e_j)=1$ y $a(s_i)=\varepsilon:=1/(n+1)>0$. Mismos $k$ y $t$; $k<n<N$. Costo $O((n+m)^2)$, polinomial.
+\item \emph{Descomposición de $f$.} Para $A\subseteq$ vértices, un vértice $v$ queda cubierto ($1-\prod_{u\in A}(1-w_{uv})=1$) si y solo si $v\in A$ o algún vecino de $v$ está en $A$ (mismo argumento del Lema~\ref{lem:cobertura}). Sean $C(A)$ el número de $e_j$ cubiertos y $D(A)$ el de $s_i$ cubiertos. Entonces $f(A)=C(A)+\varepsilon D(A)$ con $0\le\varepsilon D(A)\le n/(n+1)<1$.
+\item ($\Rightarrow$) Si $I$, $|I|\le k$, cumple $|\bigcup_{i\in I}S_i|\ge t$, sea $A=\{s_i:i\in I\}$. Cada $e_j$ con $j\in\bigcup_{i\in I}S_i$ es vecino de algún $s_i\in A$, luego $C(A)\ge t$ y $f(A)\ge C(A)\ge t$.
+\item ($\Leftarrow$) Si $|A|\le k$ y $f(A)\ge t$: por (3), $C(A)> t-1$, y como $C(A)$ y $t$ son enteros, $C(A)\ge t$. Se construye $I$: por cada $s_i\in A$ se agrega $i$; por cada $e_j\in A$ se agrega un índice $i(j)$ con $j\in S_{i(j)}$ (existe por la limpieza (1)). Así $|I|\le|A|\le k$. Todo $e_j$ cubierto por $A$ está en $\bigcup_{i\in I}S_i$: o bien es vecino de un $s_i\in A$ (y $j\in S_i$, $i\in I$), o bien $e_j\in A$ (y $j\in S_{i(j)}$, $i(j)\in I$). Luego $|\bigcup_{i\in I}S_i|\ge C(A)\ge t$.
+\item La pertenencia a NP es la Proposición~\ref{prop:np}. Por (4)–(5) y el Lema~\ref{lem:cobmax}, la subfamilia es NP-completa.
+\end{enumerate}
+\end{proof}
+\begin{observacion}
+En la subfamilia los pesos de $W$ son 0/1, mientras que el JSON trae pesos en el intervalo $(0,1)$ y un grafo completo. La Proposición~\ref{prop:refuerzo} prueba la dureza para el \emph{esquema} (que admite cualquier grafo y cualquier peso en $[0,1]$), no para la instancia concreta de 15 nodos, que es finita y se resuelve exactamente por fuerza bruta.
+\end{observacion}
+
+\subsection{Consecuencias y conclusión}
+
+\begin{corolario}[demostrado por nosotros]\label{cor:opt}
+(a) La versión de optimización de la Parte 2 (modo \texttt{k}) es NP-difícil: si se resolviera en tiempo polinomial, \textsc{Sel-Dec} se decidiría comparando $f(S^\ast)$ con $t$, y entonces P$=$NP.
+(b) Los modos \texttt{costo} y \texttt{ambos} también son NP-difíciles: toda instancia del modo \texttt{k} es una instancia del modo \texttt{costo} con $c_i=1$ y $L=k$ (pues $\sum_{i\in S}1\le k\iff|S|\le k$) y del modo \texttt{ambos} con $c_i=0$, $L=0$.
+(c) \textsc{Sel-Dec} es NP-difícil \emph{en sentido fuerte}: en las instancias producidas por $\varphi$ todos los números ($a_j$, $w_{ij}$, $k$, $t$) están acotados por $\max(n,m)$, polinomial en la longitud. Por tanto no existe un algoritmo pseudo-polinomial para la Parte 2 salvo que P$=$NP (definición de dureza fuerte según Garey y Johnson \cite{gj1979} \VER{} para la página exacta).
+\end{corolario}
+
+\paragraph{Conclusión.}
+\begin{itemize}[leftmargin=*]
+\item \textbf{Componente NP-difícil: la Parte 2 (selección de participantes)}, en sus tres modos, incluida la subfamilia del esquema JSON (simétrica, $w_{ii}=1$, $a>0$). Por eso no se busca un algoritmo exacto polinomial para ella: se usa un voraz con garantía $1-1/e$ en el modo \texttt{k} (Sección~\ref{sec:cota}) y fuerza bruta solo para instancias pequeñas.
+\item \textbf{Parte 1 (reparto)}: tiene un algoritmo exacto en $O(N+B\log N)$ (Sección~\ref{sec:optimo}), polinomial en $N$ y \emph{pseudo-polinomial} en $B$. No afirmamos aquí nada sobre su dureza en la longitud en bits de $B$; solo que el algoritmo implementado es exacto y pseudo-polinomial. No hay contradicción con la NP-dureza: son problemas distintos, y la dificultad del proyecto está en \emph{a quién elegir}, no en \emph{cuánto dar}.
+\end{itemize}
