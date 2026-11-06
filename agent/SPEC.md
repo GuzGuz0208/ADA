@@ -82,4 +82,4 @@ Caso de la profesora, ronda 1, con D-01…D-03, w simétrico, w_ii=1:
 - [x] Repo con README (versión Python, dependencias, ejemplo pequeño), generador con semillas, pruebas (≥1 que verifique restricciones), identificación y enlace accesible. *(C-0009: README listo; accesibilidad del repo = Q-02, pendiente del usuario)*
 - [x] `python -m ada_g2 run --input <json>` produce por caso: resultado, **tiempo**, **traza** (selección, ganancias marginales, reparto, verificación de restricciones). *(C-0008: exit 0, TODO CUMPLE; `results/caso_entrada_G2_red_15_nodos/`)*
 - [x] Manual técnico completo (guía §6). *(C-0009: `manual/MANUAL_TECNICO.md`; contrastar con las guías de la profesora, D-30)*
-- [ ] Consistencia: informe = repo = manual = resultados (tag `v0.1-primera-entrega`). *(pendiente: compilación en letX y tag tras confirmar la portada)*
+- [x] Consistencia: informe = repo = manual = resultados (tag `v0.1-primera-entrega`). *(C-0012: PDF compilados en letX por el usuario, informe 21 págs. y manual 13 págs., sin "??"; tag sobre el commit de C-0012)*

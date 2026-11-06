@@ -233,3 +233,26 @@
   - Tag `v0.1-primera-entrega`: NO creado (D-34)
 - **Commit:** pendiente (hash en la respuesta del scribe; se registra en la siguiente entrada)
 - **Siguiente paso:** el usuario compila en letX `manual/manual_tecnico.tex` (pdfLaTeX, 2 pasadas) → `manual/manual_tecnico.pdf`, y recompila `informe/main.tex` → `informe/informe.pdf`; después commit de ambos PDF y `git tag v0.1-primera-entrega` sobre ese commit.
+
+### C-0012 · 2026-11-05 23:09 · claude-haiku-5.5 (scribe), por orden del orquestador · tarea T08 (cierre de la primera entrega; tag v0.1-primera-entrega)
+- **Tipo:** docs + chore
+- **Archivos:**
+  - M `informe/informe.pdf` — recompilado por el usuario en letX: 21 págs.; incluye el cambio de la sección 3 (`instancia_ajustada`, `python -m ada_g2 ajustada`); sustituye al PDF de C-0010
+  - A `manual/manual_tecnico.pdf` — compilado por el usuario en letX: 13 págs.; figura TikZ compiló; portada correcta
+  - M `agent/SPEC.md` — §8 ítem 5 marcado `[x]` (consistencia)
+  - M `agent/TASKS.md` — T07 ✅ y T08 ✅ con nota
+  - M `agent/DECISIONS.md` — D-34 cumplida; D-35 (push y tag autorizados por el usuario); Q-02: visibilidad resuelta, pregunta de trabajo individual abierta
+  - M `agent/CONTEXT.md` — reescrito: P0 completo, siguiente paso P1 (T13) en sesión nueva
+  - M `agent/CHANGELOG.md` — solo esta entrada añadida
+  - M `agent/log/auto_changes.log` — traza automática (si hubo cambios)
+  - Tag anotado `v0.1-primera-entrega` sobre el commit de esta entrada (no es archivo)
+  - Excluido a propósito: `informe/informe.zip` (ignorado por `.gitignore`)
+- **Qué y por qué:** cierra la primera entrega (P0). PDF finales compilados en letX por el usuario; checklist SPEC §8 completo; tag según D-34. El usuario dejó el repo público (Q-02, visibilidad) y pidió push (D-35).
+- **Verificación:**
+  - orquestador: pdfplumber sobre `informe/informe.pdf` → 21 págs., 0 "??"; sobre `manual/manual_tecnico.pdf` → 13 págs., 0 "??", portada correcta, figura TikZ compiló.
+  - scribe: `git status --short` antes de añadir = `M informe/informe.pdf` y `?? manual/manual_tecnico.pdf`; `git diff --stat` de informe.pdf: 565421 → 565484 bytes. `agent/log/auto_changes.log` sin cambios en ese momento.
+  - Sin cambios de código: `pytest` no re-ejecutado en esta entrada (último: 240 passed, C-0010).
+  - Pre-commit: resultado en la respuesta del scribe (sin `--no-verify`).
+  - Sin verificar: visibilidad pública del repo (declarada por el usuario; no comprobada por el scribe); revisión visual de los PDF más allá de pdfplumber.
+- **Commit:** el commit que contiene esta entrada (`git log -1`); tag `v0.1-primera-entrega` sobre él. C-0011 = `72cca80`; C-0010 = `730c8fa`; C-0009 = `4376f41`.
+- **Siguiente paso:** sesión nueva; leer `agent/CONTEXT.md` y empezar P1 con T13 (experimentos E1–E3 en `results/experimentos/`, según `agent/SPEC.md`).
