@@ -30,13 +30,14 @@ Contexto: se verificó que **ningún documento del Grupo 2** (PDF general, docx,
 | D-17 | **Avisos de cambio de sesión** (formato en `agent/ROLES.md`): quien trabaje debe imprimirlos él mismo, porque ningún chat puede avisar sin que el usuario escriba | El usuario quiere saber cuándo mover el trabajo entre chats/IAs |
 | D-18 | **Repositorio remoto:** https://github.com/GuzGuz0208/ADA (creado por el usuario el 2026-11-05). Se añade como `origin` en T00; **no hacer `git push` hasta que el usuario lo pida**; etiqueta `v0.1-primera-entrega` al entregar | Resuelve la parte de URL de Q-02; el enlace debe ser accesible para la profesora (verificar visibilidad/invitación) |
 | D-19 | **Entorno de informe:** el usuario tiene sesión iniciada en letX (plan gratuito) para compilar el LaTeX en la nube; MiKTeX + pandoc locales son opcionales (permiten a los agentes generar el PDF sin conexión). Si no hay TeX local, el informe se entrega compilando en letX o exportando desde pandoc a DOCX | Resuelve Q-03 en parte; no bloquea nada |
+| D-20 | **Formato del informe: PDF compilado con LaTeX en letX** (elegido por el usuario el 2026-11-05 en T00). Fuente en `informe/` como `main.tex` + `secciones/*.tex` (compilable en letX sin paquetes exóticos), con espejo Markdown para estudio. En el PC no hay pandoc ni TeX local (comprobado en T00), así que los agentes no compilan: el usuario sube `informe/` a letX. Precisa D-09 y resuelve Q-03 | Las demostraciones y tablas de costeo llevan mucha matemática; origen: usuario |
 
 ## Abiertas (preguntar solo si cambian el resultado)
 | ID | Pregunta | Bloquea | Default mientras tanto |
 |---|---|---|---|
 | Q-01 | ¿Qué se entrega exactamente mañana? La guía dice que pedir los 4 productos juntos es "propuesta pendiente de confirmar con el docente" | Prioridades | P0 = los 4 productos de la guía |
 | Q-02 | ~~Nombres de los 2 integrantes y URL del repositorio~~ **RESUELTA 2026-11-05:** integrante único = Juan Esteban Guzmán Henao; repo = https://github.com/GuzGuz0208/ADA (D-18). **Sigue abierto:** ¿la profesora acepta trabajo individual y sustentación sin pareja? y ¿el enlace es accesible para ella (público o invitación)? | Informe | Preguntar a la profesora |
-| Q-03 | ¿Hay LaTeX (MiKTeX/TeX Live) o pandoc instalado en el PC? ¿Informe en Word o PDF? (D-19: hay letX en la nube; falta saber lo local) | Exportación | Markdown + exportar con lo que haya; PDF vía letX |
+| Q-03 | **RESUELTA 2026-11-05 (D-20): PDF vía LaTeX en letX; sin pandoc/TeX local.** ~~¿Hay LaTeX (MiKTeX/TeX Live) o pandoc instalado en el PC? ¿Informe en Word o PDF? (D-19: hay letX en la nube; falta saber lo local)~~ | Exportación | Markdown + exportar con lo que haya; PDF vía letX |
 | Q-04 | ¿El grafo de influencia es dirigido? | Cálculo de f | Simétrico (D-10) |
 | Q-05 | ¿La profesora espera una forma concreta de u_i, f o q? | Modelo | D-01, D-02, D-07 |
 

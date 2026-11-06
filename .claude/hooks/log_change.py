@@ -28,8 +28,8 @@ def main():
     except ValueError:  # otra unidad en Windows
         rel = path
     rel = rel.replace("\\", "/")
-    if rel.startswith("agent/log/"):
-        return
+    if rel.startswith("agent/log/") or rel.startswith("../"):
+        return  # la propia traza, o archivos fuera del repo (p. ej. planes de Claude Code)
     bogota = datetime.timezone(datetime.timedelta(hours=-5))  # America/Bogota, sin horario de verano
     ts = datetime.datetime.now(bogota).strftime("%Y-%m-%d %H:%M:%S")
     line = "{}\t{}\t{}\tsesion={}\n".format(
@@ -37,7 +37,7 @@ def main():
     )
     logdir = os.path.join(root, "agent", "log")
     os.makedirs(logdir, exist_ok=True)
-    with open(os.path.join(logdir, "auto_changes.log"), "a", encoding="utf-8") as fh:
+    with open(os.path.join(logdir, "auto_changes.log"), "a", encoding="utf-8", newline="\n") as fh:
         fh.write(line)
 
 

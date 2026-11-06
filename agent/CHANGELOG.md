@@ -69,3 +69,20 @@
 - **Verificación:** `grep claude-config AGENTS.md CLAUDE.md` solo deja la mención condicional de CLAUDE.md.
 - **Commit:** pendiente (lo crea T00)
 - **Siguiente paso:** T00 en VS Code.
+
+### C-0005 · 2026-11-05 21:56 · claude-opus-5.5 (Claude Code en VS Code, orquestador; registro por subagente scribe) · tarea T00
+- **Tipo:** chore
+- **Archivos:**
+  - M `.claude/hooks/log_change.py` — escribe con `newline="\n"` (en Windows metía CRLF y git avisaba) e ignora rutas fuera del repo (`../`, p. ej. planes de Claude Code)
+  - M `agent/DECISIONS.md` — A D-20 (informe en PDF vía LaTeX en letX; fuente `informe/main.tex` + `informe/secciones/*.tex` + espejo Markdown; sin compilación local); Q-03 marcada RESUELTA
+  - M `agent/CONTEXT.md` — estado tras T00, siguiente paso (T01 ‖ T04), Q-03 fuera de pendientes del usuario
+  - M `agent/TASKS.md` — T00 → ✅ con nota
+  - M `agent/log/auto_changes.log` — traza automática de Write/Edit (PostToolUse) de esta sesión
+  - Además, sin archivos nuevos de contenido: `git init -b main`, `git config core.hooksPath agent/hooks`, `git update-index --chmod=+x agent/hooks/pre-commit`, `git remote add origin https://github.com/GuzGuz0208/ADA.git` (sin push)
+- **Qué y por qué:** cierra T00 (arranque en Windows). El primer commit `5054456` (C-0001…C-0004) incluye esas cuatro entradas; sus campos "Commit: pendiente" no se editaron (solo-añadir). Se usa la hora de Bogotá 21:56 calculada con `zoneinfo`: en Git Bash `TZ=America/Bogota date` devolvió la hora UTC (02:56 del 2026-11-06).
+- **Verificación:**
+  - Ejecutado por el orquestador: `git init`/`hooksPath`/`chmod` (modo 100755 confirmado); `git remote -v` muestra origin; PostToolUse escribe en `agent/log/auto_changes.log`; `check_logged.py` probado a mano: bloquea con archivo sin registrar (`prueba_hook.txt`, borrado después), no bloquea con `stop_hook_active=true` ni con árbol limpio; pre-commit rechazó un commit sin CHANGELOG (exit 1); Python 3.12.10 (`python` y `py`), git 2.56; `.venv` con requirements.txt → pytest 9.2.0, numpy 2.5.4, scipy 1.18.1, matplotlib 3.11.2, hypothesis 6.170.14; `agent/claude-config/` no existe y `.claude/` completo.
+  - Ejecutado por el scribe: `git status --short` (3 M, sin no rastreados), `git diff --stat`, `git ls-files -s agent/hooks/pre-commit`, `git config core.hooksPath`, hora con `zoneinfo`.
+  - Sin verificar: `pytest -q` (aún no hay pruebas; T05); pandoc/LaTeX no instalados (comprobado en T00, no hace falta para T00).
+- **Commit:** `5054456` (C-0001…C-0004). El de este cambio (T00 cerrada) se anota en la siguiente entrada.
+- **Siguiente paso:** `theorist` T01 y `implementer` T04 en paralelo (ver `agent/CONTEXT.md`, "Siguiente paso inmediato").
