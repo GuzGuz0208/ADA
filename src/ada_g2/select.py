@@ -63,7 +63,7 @@ def voraz(W, a, c, cand: np.ndarray, kmax: int, Lmax, criterio: str) -> Resultad
     factible tiene ganancia > 0. Desempate: menor indice (np.argmax devuelve la primera aparicion).
     T = O(kmax * N * M): kmax pasos, cada uno N evaluaciones de tau=O(M) (matvec W @ (a*R)) + O(N) elegir.
     """
-    n = len(a)
+    n = W.shape[0]                      # candidatos N (filas de W); a tiene longitud M (objetivos)
     carr = np.asarray(c, dtype=float)
     R = residual_inicial(W.shape[1])
     en_S = np.zeros(n, dtype=bool)
@@ -99,7 +99,7 @@ def mejor_singleton(W, a, c, cand: np.ndarray, kmax: int, Lmax) -> ResultadoVora
     """Mejor conjunto unitario factible (c_i<=Lmax). Pre/Pos como voraz. T = O(N*M)."""
     carr = np.asarray(c, dtype=float)
     gan = ganancias_todas(W, a, residual_inicial(W.shape[1]))
-    fact = cand & (carr <= Lmax) if kmax >= 1 else np.zeros(len(a), dtype=bool)
+    fact = cand & (carr <= Lmax) if kmax >= 1 else np.zeros(W.shape[0], dtype=bool)
     if not fact.any():
         return ResultadoVoraz("singleton", [], 0.0, 0, [])
     i = int(np.argmax(np.where(fact, gan, -np.inf)))

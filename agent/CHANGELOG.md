@@ -136,3 +136,31 @@
   - Sin verificar: compilación LaTeX (no hay TeX local; D-20); `pytest -q` en este bloque (no ejecutado; `tests/` lo escribe el verifier); verificación de T03 (instancia 4×5 a mano y por código, pendiente del verifier); cifras `[RESULTADO-T06]` y cota `[RESULTADO-T12]` sin rellenar a propósito (vienen del código).
 - **Commit:** pendiente (ver `git log`; el hash lo anota la siguiente entrada)
 - **Siguiente paso:** `verifier`: cuando termine `tests/test_propiedades.py`, ejecutar `.venv\Scripts\python -m pytest -q` y verificar la instancia 4×5 de `informe/secciones/02_np_dureza.tex` contra `src/ada_g2/select.py`; luego `implementer` (T06) para llenar `[RESULTADO-T06]`.
+
+### C-0008 · 2026-11-05 22:21 · scribe (claude-haiku-5.5), registrando trabajo de verifier (claude-sonnet) y fix de orquestador (claude-opus-5.5) · tarea T05, T06 (y W1, W2, W3, T12, verificación de T03)
+- **Tipo:** test + fix (BUG-1)
+- **Archivos:**
+  - A `tests/helpers.py` — utilidades compartidas por las pruebas
+  - A `tests/test_reparto.py` — reparto = DP exacto (hypothesis, 700 instancias, incl. Σr<B); dualidad con brecha ≤1e-9 (700) y dualidad débil
+  - A `tests/test_funcion_f.py` — f monótona y submodular, f(∅)=0, Δ incremental = directa (600 instancias)
+  - A `tests/test_seleccion.py` — 2250 instancias (3 familias × 3 modos): restricciones, voraz ≥ 1−(1−1/k)^k en modo k, óptimo ≤ cota LP; regresión de BUG-1 (`test_rectangular_sin_cuadrar`, 40 semillas)
+  - A `tests/test_np_reduccion.py` — tabla 4×5 del informe, instancia negativa, CobMax-Dec ⇔ Sel-Dec en subfamilia simétrica (60 instancias); instancia ajustada D-15 (razones 3/4, 19/27, 2101/3125)
+  - A `tests/test_caso_profesora.py` — reproduce los valores de SPEC §6; contraejemplos de la sección 03 (5/6, 0.1 y el de costos 2/L)
+  - A `tests/test_cli_validacion.py` — CLI: 13 JSON inválidos → exit 2; 5 JSON sintéticos válidos → exit 0
+  - M `src/ada_g2/select.py` — BUG-1: `voraz` y `mejor_singleton` usaban `len(a)` (M) como N; ahora `W.shape[0]`. Fallaba con N≠M (familia general y reducción); el caso de la profesora (M=N) no cambia
+  - M `tests/test_seleccion.py` — la prueba xfail pasa a regresión y se añade `test_rectangular_sin_cuadrar`
+  - M `results/caso_entrada_G2_red_15_nodos/tiempo.csv` — tiempos de la ejecución de T06 (resultado sin cambios)
+  - M `informe/main.tex` — portada: "Facultad de Inteligencia Artificial e Ingenierías" (corrección del usuario)
+  - M `agent/SPEC.md` — §4: "propuesta D-21, pendiente de registrar" → "D-21 (registrada)"
+  - M `agent/CONTEXT.md`, `agent/TASKS.md` (T05, T06, W1, W2 ✅; W3, T12 🔄; nota de T03), `agent/DECISIONS.md` (A Q-06), `agent/log/auto_changes.log` (traza automática)
+- **Qué y por qué:** verificación independiente de la Parte 1, f, selección, reducción NP y CLI, más allá de los 5 smoke tests. Esta verificación encontró BUG-1 (N≠M), ya corregido. T06: el caso de la profesora se ejecutó sin editar código. Dato para el informe (sección 03): el conteo literal del voraz es k·N·M multiplicaciones (calcula también los ya elegidos); P = kN−k(k−1)/2 evaluaciones útiles; la clase Θ(kNM) se mantiene.
+- **Verificación:**
+  - Verifier, antes del arreglo: `pytest -q` → 198 passed, 1 xfailed.
+  - Orquestador, tras el arreglo: `.venv/Scripts/python -m pytest -q` → **239 passed in 17.32s**.
+  - Orquestador: `python -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out results/` → exit 0, TODO CUMPLE. R1=R2 S={N09,N11,N13,N14,N15} f=145.5795 costo 23 reparto 7/5/5/7/6 u=88.5640; R3 reparto N09:4 N11:8 N13:8 N14:4 N15:6 u=85.6108; Σf=436.7386, Σu=262.7387; pipeline mediana 6.685 ms; exacto de referencia 51.2 ms.
+  - Razón mínima medida (3 familias × 3 modos): modo k 0.8885 (familia rala); costo 0.8864; ambos 0.8148 (familia rala, mínima global). Sin garantía en costo ni ambos (R-01).
+  - No probado: exit 3 de la CLI; instancias aleatorias N>9; tiempos y T(n) (T13).
+  - Sin verificar: compilación LaTeX (sin TeX local). Hook pre-commit: se ejecuta en el commit de esta entrada.
+  - No bloqueante (`io.py`): un id repetido produce cascada de "arista a nodo inexistente" y el error de nodo inexistente oculta el de peso.
+- **Commit:** pendiente (commit de esta misma entrada; el hash se anota en la siguiente entrada)
+- **Siguiente paso:** `report-writer` (T07): `grep -rn "RESULTADO-T06" informe/` y sustituir los marcadores por las cifras de `results/caso_entrada_G2_red_15_nodos/resultado.json`; luego README y manual.
