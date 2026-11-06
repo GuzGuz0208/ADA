@@ -1,0 +1,533 @@
+% ============================================================
+% Manual técnico de la solución base — ADA 2026-B — Subproyecto 2 (Grupo 2)
+% Compilar con pdfLaTeX en letX/Overleaf (un solo archivo, sin shell-escape).
+% Fuente de contenido: manual/MANUAL_TECNICO.md y README.md (Sección 10).
+% ============================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-nodecimaldot,es-noshorthands]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage[hidelinks]{hyperref}
+
+% ---------- Pseudocódigo en español ----------
+\floatname{algorithm}{Algoritmo}
+\algrenewcommand\algorithmicrequire{\textbf{Precondición:}}
+\algrenewcommand\algorithmicensure{\textbf{Poscondición:}}
+\algrenewcommand\algorithmicwhile{\textbf{mientras}}
+\algrenewcommand\algorithmicdo{\textbf{hacer}}
+\algrenewcommand\algorithmicfor{\textbf{para}}
+\algrenewcommand\algorithmicif{\textbf{si}}
+\algrenewcommand\algorithmicthen{\textbf{entonces}}
+\algrenewcommand\algorithmicelse{\textbf{si no}}
+\algrenewcommand\algorithmicreturn{\textbf{devolver}}
+\algrenewcommand\algorithmicend{\textbf{fin}}
+
+% ---------- Bloques de consola / código (solo ASCII) ----------
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{black!40},
+  backgroundcolor=\color{black!3},
+  xleftmargin=0.5em,
+  xrightmargin=0.5em,
+  aboveskip=0.8em,
+  belowskip=0.8em
+}
+
+% ---------- Notación ----------
+\newcommand{\Nat}{\mathbb{N}}
+\newcommand{\Rea}{\mathbb{R}}
+\newcommand{\cod}[1]{\texttt{\detokenize{#1}}}
+
+\begin{document}
+
+% ---------------- Portada ----------------
+\begin{titlepage}
+\centering
+{\large Universidad de Caldas\\ Facultad de Inteligencia Artificial e Ingenierías\\[0.3cm]}
+{\large Análisis y Diseño de Algoritmos — 2026-B\\[2cm]}
+{\LARGE\bfseries Proyecto semestral\\[0.3cm]
+Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
+{\Large Manual técnico de la solución base\\[2cm]}
+{\large \textbf{Integrante:} Juan Esteban Guzmán Henao\\[0.3cm]
+\textbf{Profesora:} Luz Enith Guerrero\\[0.3cm]
+\textbf{Grupo:} 2\\[0.3cm]
+\textbf{Repositorio:} \url{https://github.com/GuzGuz0208/ADA}\\[0.3cm]
+\textbf{Versión:} etiqueta \texttt{v0.1-primera-entrega}\\[2cm]}
+{\large Manizales, 6 de noviembre de 2026}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section*{Presentación}
+\addcontentsline{toc}{section}{Presentación}
+Este manual describe el código de \cod{src/ada_g2/} tal como está en la versión \texttt{v0.1-primera-entrega} (paquete 0.1.0). Su propósito es que otra persona entienda cómo está construida la implementación y pueda reproducir su ejecución sin explicaciones adicionales de los autores. Sigue el orden de la guía de la primera entrega (§6): Entorno, Arquitectura, Funcionamiento, Uso, Validación y límites, e Identificación y enlace.
+
+Esta versión es la \textbf{solución base} de la primera entrega y \textbf{no es la solución final}: la Sección~\ref{sec:alcance} separa lo implementado de lo parcial y de lo no desarrollado. Las demostraciones (NP-dureza, optimalidad del reparto, cota $1-1/e$) están en el informe técnico (\cod{informe/main.tex}), no aquí. Los supuestos de modelado se identifican como D-xx (registro de decisiones del proyecto). Toda la salida de consola mostrada en este manual es salida real de ejecuciones del código.
+
+% =====================================================================
+\section{Entorno}\label{sec:entorno}
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}X@{}}
+\toprule
+\textbf{Elemento} & \textbf{Detalle}\\
+\midrule
+Lenguaje & Python $\ge 3.10$ (probado con 3.12.10)\\
+Dependencias de ejecución & \cod{numpy>=1.26}, \cod{scipy>=1.11} (\cod{pyproject.toml})\\
+Desarrollo y pruebas & \cod{matplotlib>=3.8}, \cod{pytest>=8.0}, \cod{hypothesis>=6.100} (\cod{requirements.txt})\\
+Sistema compatible & Probado en Windows 11 (Git Bash y PowerShell). No usa rutas absolutas ni nada específico del sistema, por lo que debería funcionar en Linux y macOS, pero allí \textbf{no se ha probado}.\\
+Instalación & \cod{python -m venv .venv}, activar el entorno, \cod{pip install -r requirements.txt}, \cod{pip install -e .}\\
+Punto de entrada & \texttt{python -m ada\_g2 run|generar|ajustada} (\cod{src/ada_g2/__main__.py} llama a \cod{cli.main})\\
+Semilla por defecto & 20261105 (\cod{ada_g2.SEMILLA_POR_DEFECTO}), supuesto D-11\\
+\bottomrule
+\end{tabularx}
+
+\medskip
+Activación del entorno: en Windows, \cod{.venv\Scripts\activate}; en Linux/macOS, \cod{source .venv/bin/activate}.
+
+% =====================================================================
+\section{Arquitectura}\label{sec:arquitectura}
+
+\subsection{Estructura de carpetas}
+
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}X@{}}
+\toprule
+\textbf{Carpeta} & \textbf{Responsabilidad}\\
+\midrule
+\cod{src/ada_g2/} & el código (paquete instalable)\\
+\cod{tests/} & pruebas (7 archivos, 240 pruebas con parametrización)\\
+\cod{results/} & salidas por caso: \cod{caso_<nombre>/}\\
+\cod{informe/} & informe técnico en LaTeX, con espejo en Markdown\\
+\cod{manual/} & este manual (fuente \cod{manual_tecnico.tex}; versión PDF \cod{manual_tecnico.pdf}; espejo \cod{MANUAL_TECNICO.md})\\
+\cod{project-docs/} & enunciado y JSON de la profesora (solo lectura)\\
+\cod{agent/} & memoria de trabajo de los agentes (decisiones D-xx, bitácora); no es parte de la solución\\
+\bottomrule
+\end{tabularx}
+
+\subsection{Módulos de \texttt{src/ada\_g2/}}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+\textbf{Módulo} & \textbf{Responsabilidad} & \textbf{Funciones y clases principales}\\
+\midrule
+\endhead
+\cod{io.py} & Cargar y validar el JSON. Reúne \emph{todos} los errores con su ruta (p.\,ej.\ \cod{nodos[3].costo_participacion}) y lanza \cod{EntradaInvalida}. Construye la matriz simétrica $W$ con $W_{ii}=1$. & \cod{cargar}, \cod{desde_dict}, \cod{Instancia}, \cod{EntradaInvalida}\\
+\cod{model.py} & Modelo matemático: utilidad $u(x)=a\ln(1+x)$, ganancia marginal, función de cobertura $f$ y vector residual $R_j$. & \cod{utilidad}, \cod{ganancia_marginal}, \cod{residual_inicial}, \cod{ganancias_todas}, \cod{ganancia_uno}, \cod{actualizar_residual}, \cod{f_directa}\\
+\cod{select.py} & \textbf{Parte 2.} Voraz por ganancia marginal (criterios \cod{ganancia} y \cod{razon}), mejor nodo individual y escogencia según el modo. & \cod{seleccionar}, \cod{voraz}, \cod{mejor_singleton}, \cod{limites}, \cod{MODOS}\\
+\cod{allocate.py} & \textbf{Parte 1.} Reparto voraz con montículo (\cod{heapq}) y topes por nodo. & \cod{asignar}, \cod{ResultadoReparto}, \cod{PasoReparto}\\
+\cod{rounds.py} & Cadena de $T$ rondas (Parte 2 y luego Parte 1), topes restantes, política de gasto, fallas con probabilidad $q$, verificación explícita de restricciones y comparación con el exacto. & \cod{ejecutar}, \cod{verificar_ronda}, \cod{comparar_exacto}, \cod{Corrida}, \cod{Ronda}\\
+\cod{certificates.py} & Certificados por ejecución (D-14): dualidad de Lagrange para el reparto; cota por programa lineal (HiGHS) para la selección. & \cod{certificar_reparto}, \cod{certificar_seleccion}\\
+\cod{exact.py} & Referencias exactas solo para validar: fuerza bruta de la selección (DFS) y programación dinámica del reparto. & \cod{fuerza_bruta}, \cod{dp_reparto}, \cod{num_subconjuntos}\\
+\cod{generator.py} & Instancias sintéticas con el mismo esquema JSON, deterministas por semilla; instancia ajustada D-15 (familia general con $N\neq M$). & \cod{generar}, \cod{ajustada}, \cod{instancia_ajustada}\\
+\cod{trace.py} & Escribe \cod{resultado.json}, \cod{tiempo.csv}, \cod{traza.md} y \cod{traza.csv}. & \cod{escribir_json}, \cod{escribir_tiempos}, \cod{escribir_traza}, \cod{a_dict}\\
+\cod{cli.py} & Línea de comandos \cod{run}, \cod{generar} y \cod{ajustada}; códigos de salida. & \cod{main}, \cod{cmd_run}, \cod{cmd_generar}, \cod{cmd_ajustada}\\
+\bottomrule
+\end{longtable}
+
+Dependencias entre módulos: \cod{cli} $\to$ \cod{io}, \cod{rounds}, \cod{trace}, \cod{generator}; \cod{rounds} $\to$ \cod{select}, \cod{allocate}, \cod{certificates}, \cod{exact}, \cod{model}, \cod{io}; \cod{select} $\to$ \cod{model}; \cod{allocate} $\to$ \cod{model}; \cod{certificates} $\to$ \cod{model}, \cod{allocate}.
+
+% =====================================================================
+\section{Funcionamiento}\label{sec:funcionamiento}
+
+\subsection{Flujo del programa por ronda}
+
+Para cada ronda $t=1,\dots,T$ el programa ejecuta el flujo de la Figura~\ref{fig:flujo}. Los números coinciden con la lista de pasos que sigue.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  caja/.style={draw, rounded corners=2pt, align=center, minimum width=9.5cm, minimum height=0.85cm, font=\small},
+  flecha/.style={->, thick}
+]
+\node[caja] (a) at (0,0)     {1. Disponibles $A_t$ (presupuesto restante $>0$, sin falla)};
+\node[caja] (b) at (0,-1.5)  {2. Parte 2: selección $S_t\subseteq A_t$ (modo \texttt{k}, \texttt{costo} o \texttt{ambos})};
+\node[caja] (c) at (0,-3.0)  {3. Topes $r_i(t)$ por nodo (política \texttt{concentrado} o \texttt{uniforme})};
+\node[caja] (d) at (0,-4.5)  {4. Parte 1: reparto de $B$ unidades entre $S_t$};
+\node[caja] (e) at (0,-6.0)  {5. Verificación de restricciones y comparación de $f$};
+\node[caja] (f) at (0,-7.5)  {6. Certificados (dualidad y programa lineal)};
+\node[caja] (g) at (0,-9.0)  {7. Actualización: $\mathrm{restante}_i \leftarrow \mathrm{restante}_i - x_i$};
+\draw[flecha] (a) -- (b);
+\draw[flecha] (b) -- (c);
+\draw[flecha] (c) -- (d);
+\draw[flecha] (d) -- (e);
+\draw[flecha] (e) -- (f);
+\draw[flecha] (f) -- (g);
+\draw[flecha] (g.east) -- ++(0.9,0) |- node[pos=0.25, right, font=\footnotesize]{ronda $t+1$} (a.east);
+\end{tikzpicture}
+\caption{Pipeline por ronda. Al terminar las $T$ rondas se verifica la restricción global.}
+\label{fig:flujo}
+\end{figure}
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Disponibles.} $A_t$ = nodos con presupuesto total restante $>0$ (D-21) que no fallan en la ronda; cada nodo falla con probabilidad $q$ (D-07: $q=0$ por defecto).
+\item \textbf{Parte 2, selección.} \cod{seleccionar} devuelve $S_t\subseteq A_t$ según el modo (\cod{k}, \cod{costo}, \cod{ambos}).
+\item \textbf{Topes.} $r_i(t)$ es el restante del nodo $i$ (política \cod{concentrado}) o $\lceil \mathrm{restante}_i/(T-t+1)\rceil$ (política \cod{uniforme}, D-22).
+\item \textbf{Parte 1, reparto.} \cod{asignar(a_S, topes_S, B)} reparte $B$ unidades entre $S_t$.
+\item \textbf{Verificación.} \cod{verificar_ronda} comprueba las restricciones y se compara $f$ incremental con $f$ directa.
+\item \textbf{Certificados.} Dualidad (reparto) y programa lineal (selección).
+\item \textbf{Actualización.} $\mathrm{restante}_i \leftarrow \mathrm{restante}_i - x_i$.
+\end{enumerate}
+
+Al final se verifica la restricción global $\sum_t x_{i,t}\le R_i$. La corrida es correcta (\cod{ok}) si todo cumple.
+
+\subsection{Algoritmo de la Parte 2 (\texttt{select.py})}
+
+\paragraph{Modelo.} $f(S)=\sum_j a_j\bigl[1-\prod_{i\in S}(1-w_{ij})\bigr]$. Con el vector residual $R_j=\prod_{l\in S}(1-w_{lj})$ (inicialmente $R_j=1$), la ganancia de agregar $i\notin S$ es $\Delta(i\mid S)=\sum_j a_j\,w_{ij}\,R_j$. Al elegir $i$ se actualiza $R_j\leftarrow R_j(1-w_{ij})$ en $O(M)$.
+
+\paragraph{Implementación.} En cada paso \cod{ganancias_todas} calcula el producto matriz-vector $W(a\odot R)$, es decir, las ganancias de \emph{todos} los candidatos en $O(NM)$. Se enmascaran los ya elegidos, los que no son candidatos y los que no caben en el costo, y se escoge con \cod{np.argmax} (primer máximo, es decir, menor índice, D-12).
+
+\paragraph{Condiciones de parada.} $|S|=k_{\max}$, o no hay candidato factible, o la mejor ganancia es $\le 0$.
+
+\paragraph{Modos} (\cod{limites}): \cod{k} impone $|S|\le k$; \cod{costo} impone $\sum c\le L$; \cod{ambos} impone las dos. En todos, $|S|\le k$ significa ``a lo sumo'' (D-27).
+
+\paragraph{Heurísticas.} En modo \cod{k} solo se usa \cod{voraz_ganancia}, con garantía $1-(1-1/k)^k\ge 1-1/e$ (Nemhauser, Wolsey y Fisher, 1978; la prueba está en el informe, Sección~3.3). En los modos \cod{costo} y \cod{ambos} se toma el mejor entre \cod{voraz_ganancia}, \cod{voraz_razon} (ganancia/costo) y \cod{singleton} (mejor nodo individual factible); en empate gana la primera en ese orden (D-23). El voraz factible salta a los candidatos que no caben en lugar de detenerse (D-29). \textbf{No se afirma garantía en \cod{costo} ni en \cod{ambos}} (R-01).
+
+\paragraph{Costo.} $\Theta(k\,N\,M)$, que es $\Theta(kN^2)$ con $M=N$ en el JSON de la profesora. Las evaluaciones útiles son $P=kN-k(k-1)/2$, pero el código calcula las $N$ ganancias en cada paso y hace literalmente $kNM$ multiplicaciones; la clase de complejidad no cambia (informe, Sección~3.2, nota de fidelidad).
+
+\begin{algorithm}[ht]
+\caption{Voraz por ganancia marginal (Parte 2, modo \texttt{k})}\label{alg:voraz}
+\begin{algorithmic}[1]
+\Require matriz $W\in[0,1]^{N\times M}$, pesos $a\in\Rea_{>0}^{M}$, cupo $k$
+\Ensure $S$ con $|S|\le k$
+\State $S\gets\emptyset$;\quad $R_j\gets 1$ para todo $j$
+\While{$|S|<k$}
+  \State $g\gets W\,(a\odot R)$ \Comment{ganancias de todos los candidatos, $O(NM)$}
+  \State $i^\ast\gets\arg\max_{i\notin S} g_i$ \Comment{empate: menor índice}
+  \If{$g_{i^\ast}\le 0$} \State \textbf{salir} \EndIf
+  \State $S\gets S\cup\{i^\ast\}$;\quad $R_j\gets R_j\,(1-w_{i^\ast j})$ para todo $j$
+\EndWhile
+\State \Return $S$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Algoritmo de la Parte 1 (\texttt{allocate.py})}
+
+La ganancia marginal de dar la unidad $(x+1)$ al nodo $i$ es $g_i(x)=a_i\ln\frac{x+2}{x+1}$, estrictamente decreciente en $x$.
+
+\paragraph{Estructura de datos.} Montículo de máximos con \cod{heapq}; como \cod{heapq} es de mínimos, se guarda \cod{(-g, i)}. Contiene, para cada nodo con tope $>0$, su próxima ganancia. Se construye con \cod{heapify} en $O(N)$.
+
+\paragraph{Ciclo.} Mientras se hayan asignado menos de $B$ unidades y el montículo no esté vacío: se toma la mayor ganancia (la raíz), se incrementa \cod{x[i]}; si \cod{x[i] < tope[i]} se reemplaza la raíz por la nueva ganancia (\cod{heapreplace}, $O(\log N)$) y si no se saca (\cod{heappop}, $O(\log N)$). Desempate por menor índice (D-12).
+
+\paragraph{Condición de parada.} Se asignaron $B$ unidades \textbf{o} el montículo quedó vacío (D-28: si $\sum$ topes $<B$, sobra presupuesto y no es un error).
+
+\paragraph{Invariante.} Tras $j$ pasos, las $j$ unidades tomadas son las $j$ mayores ganancias marginales del multiconjunto; por eso el resultado es óptimo (Teorema~3.1 del informe, por intercambio y concavidad).
+
+\paragraph{Costo.} $T(N,B)=O(N+B\log N)$. La utilidad final se recalcula directamente, $\sum a_i\ln(1+x_i)$, y no se acumula.
+
+\begin{algorithm}[ht]
+\caption{Reparto voraz con montículo (Parte 1)}\label{alg:reparto}
+\begin{algorithmic}[1]
+\Require nodos de $S$ con coeficientes $a_i>0$, topes $r_i\ge 0$, presupuesto $B\in\Nat$
+\Ensure $x_i\in\Nat$, $0\le x_i\le r_i$, $\sum_i x_i\le B$, utilidad máxima
+\State $x_i\gets 0$ para todo $i$;\quad $H\gets$ montículo con $(a_i\ln 2,\,i)$ para cada $i$ con $r_i>0$
+\State $b\gets 0$
+\While{$b<B$ \textbf{y} $H\neq\emptyset$}
+  \State $(g,i)\gets$ raíz de $H$ \Comment{mayor ganancia; empate: menor índice}
+  \State $x_i\gets x_i+1$;\quad $b\gets b+1$
+  \If{$x_i<r_i$} \State reemplazar la raíz por $(a_i\ln\frac{x_i+2}{x_i+1},\,i)$
+  \Else \State sacar la raíz
+  \EndIf
+\EndWhile
+\State \Return $x$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Certificados (\texttt{certificates.py})}
+
+\paragraph{Reparto (dualidad).} Con $\lambda$ igual a la ganancia de la última unidad asignada (0 si los topes impiden gastar $B$), la cota $UB(\lambda)=\lambda B+\sum_i \max_{0\le x\le r_i}[a_i\ln(1+x)-\lambda x]$ es mayor o igual que el óptimo. El programa exige que la brecha $UB-\text{utilidad}$ sea $\le 10^{-9}$. Si se cumple, el reparto es óptimo sin conocer el óptimo por otro método.
+
+\paragraph{Selección (programa lineal).} Para cualquier $S$ factible y $f$ monótona y submodular, $f(S^\ast)\le f(S)+\max\{\sum_e\Delta(e\mid S)z_e:\ \sum z_e\le k,\ \sum c_e z_e\le L,\ 0\le z\le 1\}$. Se resuelve con \cod{scipy.optimize.linprog} (HiGHS). La razón certificada es $f(S)/\text{cota}$. Vale con cupo y costo a la vez.
+
+\paragraph{Exactos de referencia (\texttt{exact.py}, solo validación).} \cod{fuerza_bruta}: DFS sobre subconjuntos factibles (hasta 3\,000\,000 de visitas). \cod{dp_reparto}: programación dinámica sobre nodos y presupuesto.
+
+% =====================================================================
+\section{Uso paso a paso}\label{sec:uso}
+
+\subsection{Formato del JSON de entrada}
+
+Esquema de la profesora (\cod{project-docs/entrada_G2_red_15_nodos.json}). Todos los campos son obligatorios.
+
+\begin{lstlisting}
+{
+  "parametros": {
+    "numero_nodos": 15,
+    "numero_rondas": 3,
+    "cupo_participantes_por_ronda_k": 5,
+    "presupuesto_ruido_por_ronda_B": 30,
+    "presupuesto_costos_participacion_por_ronda": 24
+  },
+  "grafo": [
+    { "u": "N01", "v": "N02", "peso_influencia": 0.25 }
+  ],
+  "nodos": [
+    { "id": "N01", "coeficiente_utilidad": 8.5,
+      "presupuesto_total_nodo": 18, "costo_participacion": 3 }
+  ]
+}
+\end{lstlisting}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{5.6cm}@{}}
+\toprule
+\textbf{Campo} & \textbf{Tipo y regla} & \textbf{Significado en el código}\\
+\midrule
+\endhead
+\cod{parametros.numero_nodos} & entero $\ge 1$; debe coincidir con \cod{len(nodos)} & $N$\\
+\cod{parametros.numero_rondas} & entero $\ge 1$ & $T$\\
+\cod{parametros.cupo_participantes_por_ronda_k} & entero $\ge 1$ & $k$. Si $k\ge N$ se emite un aviso (el enunciado supone $k<N$); no es error\\
+\cod{parametros.presupuesto_ruido_por_ronda_B} & entero $\ge 0$ & $B$: unidades a repartir por ronda\\
+\cod{parametros.presupuesto_costos_participacion_por_ronda} & entero $\ge 0$ & $L$: costo máximo por ronda\\
+\cod{grafo[]} & lista de aristas & cada par se lista una vez; se trata como no dirigido (D-10): $w_{uv}=w_{vu}$\\
+\cod{grafo[].u}, \cod{grafo[].v} & ids de \cod{nodos}; sin autolazos & extremos de la arista\\
+\cod{grafo[].peso_influencia} & real en $[0,1]$; una arista repetida debe tener el mismo peso & $w_{uv}$. Pares ausentes: $w=0$. La diagonal $w_{ii}=1$ la fija el modelo (D-02)\\
+\cod{nodos[].id} & texto no vacío, único & nombre; el orden de la lista define el índice y el desempate (D-12)\\
+\cod{nodos[].coeficiente_utilidad} & real $>0$ & $a_i$ (en $f$, $a_j$; en $u$, $a_i$)\\
+\cod{nodos[].presupuesto_total_nodo} & entero $\ge 0$ & $R_i$: tope de ruido en las $T$ rondas (D-06)\\
+\cod{nodos[].costo_participacion} & entero $\ge 0$ & $c_i$\\
+\bottomrule
+\end{longtable}
+
+Cualquier incumplimiento produce el código de salida 2 y un mensaje que lista todos los problemas, por ejemplo: \cod{grafo[0].peso_influencia: debe estar en [0,1], se recibio 1.5}. La lógica no contiene constantes del caso: otro JSON con este esquema se ejecuta sin cambiar código.
+
+\subsection{Pasos}
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Instalar el entorno} (Sección~\ref{sec:entorno}):
+\begin{lstlisting}
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -e .
+\end{lstlisting}
+\item \textbf{(Opcional) generar una instancia} sintética con el mismo esquema:
+\begin{lstlisting}
+python -m ada_g2 generar --n 6 --rondas 2 --k 3 --B 10 --L 12 --seed 7 --out ejemplo_n6.json
+\end{lstlisting}
+Parámetros de \cod{generar}: \cod{--n} (obligatorio), \cod{--rondas} (3), \cod{--k} (5), \cod{--B} (30), \cod{--L} (por defecto \cod{round(0.8*k*costo medio)}), \cod{--seed} (20261105), \cod{--densidad} (1.0 = grafo completo; con valor menor, cada par aparece con esa probabilidad), \cod{--out} (obligatorio).
+\item \textbf{Ejecutar} un caso:
+\begin{lstlisting}
+python -m ada_g2 run --input <json> --out <carpeta> [--modo ambos|k|costo]
+    [--seed S] [--repeticiones R] [--q Q] [--politica concentrado|uniforme]
+\end{lstlisting}
+\item \textbf{Leer la salida} en consola (resumen por ronda y veredicto) y los archivos en \cod{<carpeta>/caso_<nombre del json>/}.
+\item \textbf{Revisar el código de salida} (\texttt{echo \$?} en Bash o \texttt{echo \%ERRORLEVEL\%} en cmd): 0, 2 o 3 (Sección~\ref{sec:codigos}).
+\item \textbf{(Opcional) verificar la cota} con el subcomando \cod{ajustada}:
+\begin{lstlisting}
+python -m ada_g2 ajustada [--k 2 3 5]
+\end{lstlisting}
+\end{enumerate}
+
+\subsection{Ejemplo de ejecución: caso de la profesora}
+
+Comando (salida real de consola; la última ruta se abrevió a \cod{out_manual}):
+
+\begin{lstlisting}
+python -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out out_manual
+
+Caso entrada_G2_red_15_nodos: N=15 T=3 k=5 B=30 L=24 modo=ambos
+  ronda 1: S=['N09', 'N11', 'N13', 'N14', 'N15'] f=145.5795 costo=23 reparto={'N09': 7, 'N11': 5, 'N13': 5, 'N14': 7, 'N15': 6} u=88.5640
+  ronda 2: S=['N09', 'N11', 'N13', 'N14', 'N15'] f=145.5795 costo=23 reparto={'N09': 7, 'N11': 5, 'N13': 5, 'N14': 7, 'N15': 6} u=88.5640
+  ronda 3: S=['N09', 'N11', 'N13', 'N14', 'N15'] f=145.5795 costo=23 reparto={'N09': 4, 'N11': 8, 'N13': 8, 'N14': 4, 'N15': 6} u=85.6108
+  suma f=436.7386  suma u=262.7387  pipeline (mediana)=5.618 ms
+  restricciones y certificados: TODO CUMPLE
+  salida: out_manual\caso_entrada_G2_red_15_nodos
+\end{lstlisting}
+
+El tiempo (\cod{pipeline (mediana)}) varía de una máquina a otra; los demás valores son deterministas. Las cifras de referencia del caso están en \cod{results/caso_entrada_G2_red_15_nodos/} y se discuten en la Sección~4 del informe.
+
+\subsection{Ejemplo de ejecución: instancia generada}
+
+Con los pasos 2 y 3 (con \cod{--seed 7}) se obtuvo, en consola:
+
+\begin{lstlisting}
+escrito ejemplo_n6.json (N=6, aristas=15, semilla=7)
+Caso ejemplo_n6: N=6 T=2 k=3 B=10 L=12 modo=ambos
+  ronda 1: S=['N01', 'N04', 'N06'] f=48.8055 costo=12 reparto={'N01': 3, 'N04': 5, 'N06': 2} u=44.7612
+  ronda 2: S=['N01', 'N04', 'N06'] f=48.8055 costo=12 reparto={'N01': 3, 'N04': 5, 'N06': 2} u=44.7612
+  suma f=97.6109  suma u=89.5223  pipeline (mediana)=3.366 ms
+  restricciones y certificados: TODO CUMPLE
+  salida: salida\caso_ejemplo_n6
+\end{lstlisting}
+
+En la ronda 1, \cod{traza.md} muestra que el voraz por ganancia elige N04 (ganancia 38.223000), luego N06 (7.988310) y N01 (2.594150), con costo acumulado 2, 7 y 12 (límite $L=12$).
+
+\subsection{Ejemplo de ejecución: subcomando \texttt{ajustada}}
+
+Salida real de consola; sale con código 0 porque la razón observada coincide con $1-(1-1/k)^k$ para todos los $k$:
+
+\begin{lstlisting}
+python -m ada_g2 ajustada
+
+k | N x M | voraz S | f(voraz) | f(optimo) | razon | 1-(1-1/k)^k
+2 | 4 x 8 | [0, 1] | 6 | 8 | 3/4 = 0.75000 | 3/4
+3 | 6 x 81 | [0, 1, 2] | 57 | 81 | 19/27 = 0.70370 | 19/27
+5 | 10 x 15625 | [0, 1, 2, 3, 4] | 10505 | 15625 | 2101/3125 = 0.67232 | 2101/3125
+cota alcanzada exactamente
+\end{lstlisting}
+
+\subsection{Significado de la salida}\label{sec:salida}
+
+Cada \cod{run} escribe cuatro archivos en \cod{<carpeta>/caso_<nombre>/}.
+
+\paragraph{\texttt{resultado.json}.} Campos principales:
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{10.6cm}@{}}
+\toprule
+\textbf{Campo} & \textbf{Contenido}\\
+\midrule
+\endhead
+\cod{version}, \cod{caso}, \cod{entorno} & versión del paquete, nombre del caso, versión de Python y plataforma\\
+\cod{parametros} & $N$, $T$, $k$, $B$, $L$, aristas, modo, $q$, política, semilla\\
+\cod{avisos} & lista de avisos de la carga (p.\,ej.\ $k\ge N$)\\
+\cod{rondas[]} & una entrada por ronda (ver abajo)\\
+\cod{totales} & \cod{suma_f}, \cod{suma_utilidad}, \cod{gasto_por_nodo}, \cod{presupuesto_total_nodo}\\
+\cod{verificacion_global} & $\sum_t x_{i,t}\le R_i$\\
+\cod{todo_cumple} & \cod{true} si todo cumple (código de salida 0)\\
+\bottomrule
+\end{longtable}
+
+Cada elemento de \cod{rondas[]} contiene:
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{10.6cm}@{}}
+\toprule
+\textbf{Campo} & \textbf{Contenido}\\
+\midrule
+\endhead
+\cod{ronda}, \cod{disponibles} & número de ronda; nodos disponibles $A_t$\\
+\cod{seleccion} & ids de $S_t$\\
+\cod{detalle_seleccion} & \cod{elegida} y \cod{alternativas} (heurística, $S$ en orden de elección, $f$ y costo)\\
+\cod{f}, \cod{costo_participacion} & valor de $f(S_t)$ y costo $\sum c$ de $S_t$\\
+\cod{topes_antes}, \cod{topes_efectivos} & restante por participante antes de la ronda; tope que aplica la política\\
+\cod{reparto}, \cod{unidades_asignadas}, \cod{gasto_ruido} & unidades por nodo; total asignado; ruido gastado\\
+\cod{utilidad} & $\sum a_i\ln(1+x_i)$ de la ronda\\
+\cod{verificacion_restricciones} & lista de objetos con \cod{restriccion, descripcion, valor, limite, aplica, cumple}\\
+\cod{certificado_reparto} & \cod{lambda}, \cod{cota_superior}, \cod{utilidad}, \cod{brecha}, \cod{tolerancia}, \cod{ok}\\
+\cod{certificado_seleccion} & \cod{f_S}, \cod{extra}, \cod{cota_superior}, \cod{razon_certificada}, \cod{ok}\\
+\cod{comparacion_exacto} & \cod{seleccion_optima}, \cod{f_optima}, \cod{razon_voraz_sobre_optimo}, \cod{subconjuntos_evaluados}, \cod{subconjuntos_teoricos}, \cod{reparto_dp_utilidad}, \cod{reparto_voraz_utilidad}, \cod{reparto_dif_abs}, \cod{reparto_optimo}. Es \cod{null} si $N>20$; \cod{reparto_dp_utilidad} es \cod{null} si $|S|B^2>5\cdot 10^{7}$\\
+\bottomrule
+\end{longtable}
+
+\paragraph{\texttt{tiempo.csv}.} Columnas \cod{fase, repeticiones, mediana_s, minimo_s, maximo_s} (segundos, 9 decimales). Fases: \cod{carga_json}; \cod{seleccion} y \cod{reparto} (suma de las $T$ rondas); \cod{verificacion}; \cod{certificados}; \cod{seleccion_r<t>} y \cod{reparto_r<t>} por ronda; \cod{pipeline_total}; \cod{referencia_exacta (1 corrida)} (fuerza bruta y DP, una sola vez; no entra en el pipeline). Se ejecuta una corrida de calentamiento sin medir y luego \cod{--repeticiones} corridas; se reporta la mediana (D-11). Los certificados cuestan más que el algoritmo mismo (programa lineal): en el caso de la profesora, 5.2023 ms de 6.6853 ms.
+
+\paragraph{\texttt{traza.md}.} Por ronda: disponibles; para cada heurística, una tabla por paso (\cod{paso, elegido, ganancia marginal, puntaje, costo acum., f acum.}, más la lista de ganancias de los candidatos factibles, truncada a 10); el reparto unidad a unidad (\cod{unidad, nodo, x antes, ganancia marginal, utilidad acum.}); la tabla de verificación de restricciones; y las líneas de los certificados y del exacto. Cierra con la verificación global.
+
+\paragraph{\texttt{traza.csv}.} Columnas \cod{ronda, fase, heuristica_o_restriccion, paso, nodo, valor, detalle}. Valores de \cod{fase}: \cod{seleccion} (nodo elegido; \cod{valor} es la ganancia y \cod{detalle} trae costo y $f$ acumulados), \cod{seleccion_candidato} (ganancia de cada candidato evaluado en ese paso), \cod{reparto} (\cod{valor} es la ganancia; \cod{detalle} trae $x$ antes y la utilidad acumulada), \cod{verificacion} (una fila por restricción; ronda 0 es la global) y \cod{certificado}.
+
+\subsection{Códigos de salida}\label{sec:codigos}
+
+\begin{tabularx}{\textwidth}{@{}cX@{}}
+\toprule
+\textbf{Código} & \textbf{Significado}\\
+\midrule
+0 & todo cumple\\
+2 & entrada inválida: archivo inexistente, JSON mal formado o esquema incumplido\\
+3 & falla una restricción o un certificado (en \cod{ajustada}: la razón no coincide con la cota)\\
+\bottomrule
+\end{tabularx}
+
+\medskip
+El código 3 en \cod{run} no está cubierto por una prueba automática aún (no probado).
+
+% =====================================================================
+\section{Validación y límites}\label{sec:validacion}
+
+\subsection{Pruebas disponibles}
+
+Se ejecutan con \cod{pytest -q}. Resultado verificado al escribir este manual: \textbf{240 passed} en unos 18 s (Python 3.12.10).
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{11cm}@{}}
+\toprule
+\textbf{Archivo} & \textbf{Qué prueba}\\
+\midrule
+\endhead
+\cod{test_reparto.py} & el voraz coincide con la DP exacta en $\ge 500$ instancias (700 en total); restricciones ($\sum x\le B$, $0\le x\le$ tope, entero); certificado de dualidad (brecha $\le 10^{-9}$)\\
+\cod{test_funcion_f.py} & $f(\emptyset)=0$, monotonía, submodularidad (600 instancias), ganancia incremental igual a la diferencia directa, caso Cobertura Máxima\\
+\cod{test_seleccion.py} & restricciones en los tres modos; sin nodos repetidos; razón voraz/exacto $\ge 1-(1-1/k)^k$ en modo \cod{k} (con \cod{hypothesis}); certificado LP mayor o igual que el óptimo; instancia ajustada D-15 (razones exactas 3/4, 19/27, 2101/3125 para $k=2,3,5$); contraejemplos (voraz no óptimo, falla de submodularidad, falla con costos); conteo de evaluaciones $P$ y $kNM$; regresión BUG-1; subcomando \cod{ajustada}\\
+\cod{test_np_reduccion.py} & la reducción desde Cobertura Máxima: ejemplo $4\times 5$ del informe, instancia negativa, equivalencia CobMax-Dec $\Leftrightarrow$ Sel-Dec en la subfamilia $M=N$, $w_{ii}=1$, $a>0$ (60 instancias)\\
+\cod{test_caso_profesora.py} & valores de referencia del caso (selección, $f$, exacto en modo \cod{k}, reparto) re-derivados con el código\\
+\cod{test_cli_validacion.py} & 13 JSON inválidos con salida 2 y mensaje; 5 válidos con salida 0; CLI sobre JSON sintéticos\\
+\cod{test_smoke.py} & humo: reparto igual a la DP, el caso de la profesora cumple las restricciones, voraz frente a fuerza bruta en una instancia generada, generador determinista, mensajes de validación\\
+\bottomrule
+\end{longtable}
+
+\subsection{Certificados por ejecución}
+
+Cada corrida falla (código 3) si algún certificado no se cumple: dualidad del reparto (brecha $\le 10^{-9}$) o cota LP de la selección (cota $\ge f(S)$). Para el caso de la profesora: brecha 0 en las tres rondas, cota 151.9871 y razón certificada 0.9578. El subcomando \cod{ajustada} corre voraz y fuerza bruta sobre la instancia ajustada (D-15) y comprueba que la razón es exactamente $1-(1-1/k)^k$.
+
+\subsection{Razón frente al exacto}
+
+En el caso de la profesora (modo \cod{ambos}) la razón voraz/óptimo es 1.0000 (\cod{resultado.json}). En modo \cod{k} es 0.99775, con óptimo 145.9072. Medido por el verificador (3 familias $\times$ 250 instancias, modo \cod{k}): razón mínima 0.8885, siempre $\ge 1-(1-1/k)^k$; en \cod{costo} 0.8864 y en \cod{ambos} 0.8148, \textbf{sin garantía teórica} (R-01).
+
+\subsection{Errores conocidos}
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Ninguno abierto en la lógica.} BUG-1 (la selección usaba la longitud de $a$, es decir $M$, como número de candidatos $N$ en \cod{voraz} y \cod{mejor_singleton}; fallaba con $N\neq M$ en la familia general) se corrigió usando \cod{W.shape[0]}. No afectaba al caso de la profesora ($M=N$) y tiene prueba de regresión.
+\item \textbf{Ids repetidos.} Un id repetido en \cod{nodos} genera además errores en cascada de ``arista a nodo inexistente'' que pueden ocultar otros mensajes (mejora pendiente en \cod{io.py}).
+\item \textbf{Código de salida 3} en \cod{run}: sin prueba automática.
+\end{itemize}
+
+\subsection{Supuestos y límites}
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Saturación del caso (R-02).} El grafo de la profesora es completo con pesos $\ge 0.2$: $f(S)$ alcanza 145.5795 de un máximo $\sum a=147.8$ (0.9850) y las heurísticas dan valores muy cercanos. El caso discrimina poco; la cota $1-1/e$ se verifica en familias sintéticas.
+\item \textbf{Sin garantía con cupo y costo a la vez (R-01).} La garantía $1-(1-1/k)^k$ es solo para el modo \cod{k}. En \cod{ambos} se usa el mejor de tres heurísticas y se certifica a posteriori (razón certificada por LP), pero no hay cota a priori demostrada.
+\item \textbf{Fuerza bruta solo para $N\le 20$} (\cod{comparar_exacto}, \cod{max_n = 20}; además se corta a los 3\,000\,000 de visitas). Con $N$ mayor, \cod{comparacion_exacto} es \cod{null} y el tiempo de referencia exacta no se mide.
+\item \textbf{DP del reparto omitida} si $|S|B^2>5\cdot 10^{7}$ (D-24); entonces \cod{reparto_dp_utilidad}, \cod{reparto_dif_abs} y \cod{reparto_optimo} son \cod{null}. El certificado de dualidad sigue disponible.
+\item \textbf{Reparto pseudo-polinomial en $B$}: $O(N+B\log N)$ es lineal en el valor de $B$, no en sus bits. Con $B$ enorme y sin topes activos ni fallas es costoso (informe, Sección~1.3); el caso continuo con \emph{water-filling} está esbozado, no implementado.
+\item \textbf{El modelo es una decisión nuestra} (D-01, D-02): el enunciado no define $u_i$ ni $f$. La profesora puede preferir otras formas.
+\item \textbf{Nodos y topes}: un nodo con tope restante 0 deja de ser candidato (D-21); si $\sum$ topes $<B$ el ciclo termina sin gastar todo (D-28).
+\item \textbf{Aristas no dirigidas} (D-10), semilla por defecto 20261105 (D-11), desempate por menor índice (D-12), $q=0$ por defecto (D-07).
+\end{enumerate}
+
+\subsection{Alcance: solución base frente a variantes}\label{sec:alcance}
+
+Esta versión (\texttt{v0.1-primera-entrega}) es la \textbf{solución base} de la primera entrega y \textbf{no es la solución final}.
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{8.8cm}@{}}
+\toprule
+\textbf{Componente} & \textbf{Estado en esta versión}\\
+\midrule
+\endhead
+Parte 1, reparto voraz exacto con montículo y topes por nodo & implementado, probado contra DP exacta y certificado por dualidad\\
+Parte 2, selección voraz (modos \cod{k}, \cod{costo}, \cod{ambos}), fuerza bruta de referencia y cota LP a posteriori & implementado y probado\\
+$T$ rondas en cadena (Parte 2 y luego Parte 1) con topes que bajan entre rondas & implementado ($q=0$ en el caso de la profesora, D-07)\\
+Variante (a), costos de participación con garantía demostrada (Khuller et al.) & \textbf{parcial}: hay mejor-de-3 (voraz, razón y mejor nodo único), pero sin garantía para cupo y costo (R-01) ni enumeración parcial\\
+Variante (b), fallas con probabilidad $q$ y comparación de políticas con $\ge 100$ semillas & \textbf{parcial}: \cod{--q} y \cod{--politica} existen; falta el experimento comparativo\\
+Variante (c), nodos relacionados (caso aditivo y caso competencia) & \textbf{no desarrollada}\\
+Validación experimental ($\ge 5$ tamaños, gráfica tiempo frente a $n$ contra $T(n)$) & \textbf{no desarrollada} (tarea T13)\\
+\bottomrule
+\end{longtable}
+
+\paragraph{Componentes aún no desarrollados.} Barrido experimental por tamaños y estimación empírica de $T(n)$ (T13); deducción completa de $T(n)$ con constantes; variante (c); experimento comparativo de la variante (b). El informe y este manual se compilan en letX (D-20).
+
+% =====================================================================
+\section{Identificación y enlace}\label{sec:ident}
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Curso:} Análisis y Diseño de Algoritmos 2026-B. \textbf{Profesora:} Luz Enith Guerrero. \textbf{Universidad de Caldas.}
+\item \textbf{Subproyecto 2 (Grupo 2):} Reparto de presupuesto y selección de participantes.
+\item \textbf{Integrante:} Juan Esteban Guzmán Henao (trabajo individual).
+\item \textbf{Repositorio:} \url{https://github.com/GuzGuz0208/ADA}, rama \texttt{main}, etiqueta \texttt{v0.1-primera-entrega}.
+\item \textbf{Informe:} \cod{informe/main.tex} (y \cod{informe/INFORME.md}). \textbf{Resultados:} \cod{results/caso_entrada_G2_red_15_nodos/}.
+\end{itemize}
+
+\end{document}

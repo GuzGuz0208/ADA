@@ -214,3 +214,22 @@
   - Sin verificar: compilación de `informe/main.tex` tras el cambio de 03; compilación de `manual/manual_tecnico.tex` (aún no existe; el usuario compila en letX)
 - **Commit:** pendiente (hash en C-0011). C-0009 quedó en `4376f41`.
 - **Siguiente paso:** el usuario recompila `informe/main.tex` en letX y sustituye `informe/informe.pdf`; luego compila `manual/manual_tecnico.tex`, sube ambos PDF al repo y solo entonces crea el tag `v0.1-primera-entrega`.
+
+### C-0011 · 2026-11-05 22:48 · claude-haiku-5.5 (scribe), con report-writer (claude-sonnet) · tarea T07, T08 (manual en LaTeX)
+- **Tipo:** docs
+- **Archivos:**
+  - A `manual/manual_tecnico.tex` — manual técnico en LaTeX: un solo archivo con el preámbulo y la portada de `informe/main.tex` (título "Manual técnico de la solución base"); paquetes extra longtable, tabularx, listings, xcolor, tikz (sin minted ni shell-escape); secciones 1:1 con la guía §6 (Entorno · Arquitectura · Funcionamiento · Uso · Validación y límites · Identificación); figura TikZ del pipeline por ronda (sin compilar; si falla, la lista numerada la reemplaza); pseudocódigos de los 2 algoritmos; tablas de módulos, JSON de entrada, columnas de salida, códigos de salida, pruebas y alcance; salida de consola de `run`, `ajustada` y `generar`
+  - M `manual/MANUAL_TECNICO.md` — remite al PDF `manual/manual_tecnico.pdf`; "sistema compatible": Windows 11 probado, Linux/macOS no probados; incluye `ajustada`; 240 pruebas; nueva sección 6b con errores conocidos y tabla de alcance base frente a variantes
+  - M `agent/CONTEXT.md` (reescrito), `agent/TASKS.md` (notas en T07 y T08), `agent/DECISIONS.md` (D-33 manual en LaTeX; D-34 tag diferido), `agent/CHANGELOG.md` (solo esta entrada añadida), `agent/log/auto_changes.log` (traza automática)
+- **Qué y por qué:** pedido del usuario: manual técnico en LaTeX para compilar en letX (D-20), además del Markdown. El contenido sigue la guía §6 (D-31). C-0010 quedó en el commit `730c8fa` (no se edita su entrada).
+- **Verificación:**
+  - report-writer: `python -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out results/` → exit 0, Σf=436.7386, Σu=262.7387, TODO CUMPLE (re-ejecutado por report-writer)
+  - report-writer: `python -m ada_g2 ajustada` → exit 0; 3/4, 19/27, 2101/3125 (re-ejecutado por report-writer)
+  - report-writer: `generar` → salida copiada del manual en Markdown (no re-ejecutada en este turno)
+  - report-writer: chequeo estructural por script de `manual_tecnico.tex` (entornos y anidamiento, llaves, $, \left/\right, \ref↔\label, sin Unicode dentro de lstlisting) → OK
+  - scribe: `git status --short` = `M manual/MANUAL_TECNICO.md`, `?? manual/manual_tecnico.tex`, sin otros cambios fuera de agent/; C-0010 presente en `730c8fa`
+  - scribe: no hubo cambios de código; `pytest` no re-ejecutado en esta entrada (último resultado: 240 passed, C-0010)
+  - Sin verificar: compilación LaTeX de `manual/manual_tecnico.tex` (sin TeX local, D-20); figura TikZ; recompilación de `informe/informe.pdf` tras el cambio de 03 (pendiente del usuario en letX)
+  - Tag `v0.1-primera-entrega`: NO creado (D-34)
+- **Commit:** pendiente (hash en la respuesta del scribe; se registra en la siguiente entrada)
+- **Siguiente paso:** el usuario compila en letX `manual/manual_tecnico.tex` (pdfLaTeX, 2 pasadas) → `manual/manual_tecnico.pdf`, y recompila `informe/main.tex` → `informe/informe.pdf`; después commit de ambos PDF y `git tag v0.1-primera-entrega` sobre ese commit.

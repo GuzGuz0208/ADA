@@ -1,6 +1,8 @@
 # Manual técnico — ADA 2026-B · Grupo 2 · Subproyecto 2
 **Reparto de presupuesto y selección de participantes** · Integrante: Juan Esteban Guzmán Henao · Profesora: Luz Enith Guerrero · Universidad de Caldas · Repositorio: https://github.com/GuzGuz0208/ADA · Versión `v0.1-primera-entrega` (paquete 0.1.0)
 
+**Versión PDF de este manual:** `manual/manual_tecnico.pdf` (fuente LaTeX: `manual/manual_tecnico.tex`, se compila con pdfLaTeX en letX). Este archivo Markdown es el espejo del mismo contenido.
+
 Este manual describe el código de `src/ada_g2/` tal como está. Lo que el código no hace, se dice en la Sección 6. Las demostraciones (NP-dureza, optimalidad, cota 1 − 1/e) están en `informe/`, no aquí.
 
 ---
@@ -12,9 +14,9 @@ Este manual describe el código de `src/ada_g2/` tal como está. Lo que el códi
 | Lenguaje | Python ≥ 3.10 (probado con 3.12.10) |
 | Dependencias de ejecución | `numpy>=1.26`, `scipy>=1.11` (`pyproject.toml`) |
 | Desarrollo y pruebas | `matplotlib>=3.8`, `pytest>=8.0`, `hypothesis>=6.100` (`requirements.txt`) |
-| Sistema probado | Windows 11 (Git Bash y PowerShell); no usa rutas absolutas |
+| Sistema compatible | Probado en Windows 11 (Git Bash y PowerShell). No usa rutas absolutas ni nada específico del sistema, por lo que debería funcionar en Linux y macOS, pero allí **no se ha probado** |
 | Instalación | `python -m venv .venv` → activar → `pip install -r requirements.txt` → `pip install -e .` |
-| Punto de entrada | `python -m ada_g2 {run, generar}` (`src/ada_g2/__main__.py` → `cli.main`) |
+| Punto de entrada | `python -m ada_g2 {run, generar, ajustada}` (`src/ada_g2/__main__.py` → `cli.main`) |
 | Semilla por defecto | 20261105 (`ada_g2.SEMILLA_POR_DEFECTO`), D-11 |
 
 En Linux/macOS se activa con `source .venv/bin/activate`; en Windows con `.venv\Scripts\activate`.
@@ -28,7 +30,7 @@ En Linux/macOS se activa con `source .venv/bin/activate`; en Windows con `.venv\
 | Carpeta | Responsabilidad |
 |---|---|
 | `src/ada_g2/` | el código (paquete instalable) |
-| `tests/` | pruebas (7 archivos, 239 casos con parametrización) |
+| `tests/` | pruebas (7 archivos, 240 pruebas con parametrización) |
 | `results/` | salidas por caso: `caso_<nombre>/` |
 | `informe/` | informe técnico LaTeX + espejo Markdown |
 | `manual/` | este manual |
@@ -46,9 +48,9 @@ En Linux/macOS se activa con `source .venv/bin/activate`; en Windows con `.venv\
 | `rounds.py` | Cadena de T rondas (Parte 2 → Parte 1), topes restantes, política de gasto, fallas con probabilidad q, verificación explícita de restricciones, comparación con el exacto | `ejecutar`, `verificar_ronda`, `comparar_exacto`, `Corrida`, `Ronda` |
 | `certificates.py` | Certificados por ejecución (D-14): dualidad de Lagrange para el reparto; cota por programa lineal (HiGHS) para la selección | `certificar_reparto`, `certificar_seleccion` |
 | `exact.py` | Referencias exactas para validar: fuerza bruta de la selección (DFS) y DP del reparto | `fuerza_bruta`, `dp_reparto`, `num_subconjuntos` |
-| `generator.py` | Instancias sintéticas con el mismo esquema JSON, deterministas por semilla | `generar` |
+| `generator.py` | Instancias sintéticas con el mismo esquema JSON, deterministas por semilla; instancia ajustada D-15 (`instancia_ajustada(k)`, familia general N≠M) | `generar`, `ajustada` |
 | `trace.py` | Escribe `resultado.json`, `tiempo.csv`, `traza.md`, `traza.csv` | `escribir_json`, `escribir_tiempos`, `escribir_traza`, `a_dict` |
-| `cli.py` | Línea de comandos `run` y `generar`; códigos de salida | `main`, `cmd_run`, `cmd_generar` |
+| `cli.py` | Línea de comandos `run`, `generar` y `ajustada`; códigos de salida | `main`, `cmd_run`, `cmd_generar`, `cmd_ajustada` |
 
 Dependencias entre módulos: `cli → io, rounds, trace, generator`; `rounds → select, allocate, certificates, exact, model, io`; `select → model`; `allocate → model`; `certificates → model, allocate`.
 
@@ -185,13 +187,13 @@ En la ronda 1, `traza.md` muestra que el voraz por ganancia elige N04 (ganancia 
 
 ### 5.1 Pruebas (`pytest -q`)
 
-Resultado verificado al escribir este manual: **239 passed** en unos 16 s (Python 3.12.10).
+Resultado verificado al escribir este manual: **240 passed** en unos 18 s (Python 3.12.10).
 
 | Archivo | Qué prueba |
 |---|---|
 | `test_reparto.py` | el voraz coincide con la DP exacta en ≥ 500 instancias (700 en total); restricciones (Σx ≤ B, 0 ≤ x ≤ tope, entero); certificado de dualidad (brecha ≤ 10⁻⁹) |
 | `test_funcion_f.py` | f(∅) = 0, monotonía, submodularidad (600 instancias), ganancia incremental = diferencia directa, caso Cobertura Máxima |
-| `test_seleccion.py` | restricciones en los tres modos; sin nodos repetidos; razón voraz/exacto ≥ 1 − (1 − 1/k)^k en modo `k` (con hypothesis); certificado LP ≥ óptimo; instancia ajustada D-15 (razones exactas 3/4, 19/27, 2101/3125 para k = 2, 3, 5); contraejemplos (voraz no óptimo, falla de submodularidad, falla con costos); conteo de evaluaciones P y k·N·M; regresión BUG-1 |
+| `test_seleccion.py` | restricciones en los tres modos; sin nodos repetidos; razón voraz/exacto ≥ 1 − (1 − 1/k)^k en modo `k` (con hypothesis); certificado LP ≥ óptimo; instancia ajustada D-15 (razones exactas 3/4, 19/27, 2101/3125 para k = 2, 3, 5); contraejemplos (voraz no óptimo, falla de submodularidad, falla con costos); conteo de evaluaciones P y k·N·M; regresión BUG-1; subcomando `ajustada` |
 | `test_np_reduccion.py` | la reducción desde Cobertura Máxima: ejemplo 4×5 del informe, instancia negativa, equivalencia CobMax-Dec ⇔ Sel-Dec en la subfamilia M = N, w_ii = 1, a > 0 (60 instancias) |
 | `test_caso_profesora.py` | valores de referencia del caso (selección, f, exacto en modo `k`, reparto) re-derivados con el código |
 | `test_cli_validacion.py` | 13 JSON inválidos → exit 2 con mensaje; 5 válidos → exit 0; CLI sobre JSON sintéticos |
@@ -199,6 +201,9 @@ Resultado verificado al escribir este manual: **239 passed** en unos 16 s (Pytho
 
 ### 5.2 Certificados por ejecución
 Cada corrida falla (exit 3) si algún certificado no se cumple: dualidad del reparto (brecha ≤ 10⁻⁹) o cota LP de la selección (cota ≥ f(S)). Para el caso de la profesora: brecha 0 en las tres rondas, cota 151.9871, razón certificada 0.9578.
+
+### 5.2b Instancia ajustada (D-15)
+`python -m ada_g2 ajustada [--k 2 3 5]` corre voraz y fuerza bruta sobre la instancia ajustada e imprime la razón exacta (3/4, 19/27, 2101/3125); sale con 0 si coincide con 1 − (1 − 1/k)^k y con 3 si no.
 
 ### 5.3 Códigos de salida (D-25)
 0 = todo cumple · 2 = entrada inválida (archivo inexistente, JSON mal formado, esquema incumplido) · 3 = falla una restricción o un certificado. El código 3 no está cubierto por una prueba automática aún (no probado).
@@ -220,6 +225,24 @@ En el caso de la profesora (modo `ambos`) la razón voraz/óptimo es 1.0000 (`re
 8. **Nodos y topes:** un nodo con tope restante 0 deja de ser candidato (D-21); si Σ topes < B el ciclo termina sin gastar todo (D-28).
 9. **Pendiente en esta entrega:** barrido experimental por tamaños y la estimación empírica de T(n) (T13); deducción completa de T(n) con constantes; variantes (fallas q > 0 con barrido, nodos relacionados). El informe se compila en letX (D-20).
 10. **Errores de ids repetidos:** un id repetido en `nodos` genera además errores en cascada de "arista a nodo inexistente" que pueden ocultar otros mensajes (mejora pendiente en `io.py`).
+
+---
+
+## 6b. Errores conocidos y alcance (solución base frente a variantes)
+
+**Errores conocidos:** ninguno abierto en la lógica. BUG-1 (la selección fallaba con N ≠ M en la familia general) se corrigió y tiene prueba de regresión. Pendientes menores: mensajes en cascada con ids repetidos (punto 10 arriba) y el código de salida 3 de `run`, sin prueba automática.
+
+Esta versión (`v0.1-primera-entrega`) es la **solución base** y **no es la solución final**:
+
+| Componente | Estado en esta versión |
+|---|---|
+| Parte 1, reparto voraz exacto con montículo y topes por nodo | implementado, probado contra DP exacta y certificado por dualidad |
+| Parte 2, selección voraz (modos `k`, `costo`, `ambos`), fuerza bruta de referencia y cota LP a posteriori | implementado y probado |
+| T rondas en cadena (Parte 2 → Parte 1) con topes que bajan entre rondas | implementado (q = 0 en el caso de la profesora, D-07) |
+| Variante (a), costos de participación con garantía demostrada (Khuller et al.) | **parcial**: mejor-de-3, sin garantía para cupo + costo (R-01) ni enumeración parcial |
+| Variante (b), fallas con probabilidad q y comparación de políticas con ≥ 100 semillas | **parcial**: `--q` y `--politica` existen; falta el experimento comparativo |
+| Variante (c), nodos relacionados (aditivo y competencia) | **no desarrollada** |
+| Validación experimental (≥ 5 tamaños, gráfica tiempo vs n contra T(n)) | **no desarrollada** (tarea T13) |
 
 ---
 
