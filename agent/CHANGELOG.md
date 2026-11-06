@@ -310,3 +310,19 @@
   - Sin verificar: compilación en letX de `informe/main.tex` y `manual/manual_tecnico.tex`. Riesgo principal: la macro `\cod` (expl3) exige LaTeX ≥ 2020-10; xurl también. Si letX falla en `\cod`, alternativa: `\newcommand{\cod}[1]{\texttt{\detokenize{#1}}}`.
 - **Commit:** pendiente (el hash del commit que contiene esta entrada se reporta en la respuesta del scribe y se anota en la siguiente entrada). Commit anterior de C-0013 y C-0014: `586beec`.
 - **Siguiente paso:** el usuario recompila en letX `informe/main.tex` y `manual/manual_tecnico.tex` (pdfLaTeX, 2 pasadas); el orquestador mide los desbordes con pdfplumber; después commit de los dos PDF.
+
+### C-0016 · 2026-11-06 09:48 · claude-haiku-5.5 (scribe), por orden del orquestador (Claude Code) · tarea T08 (cierre: PDF recompilados en letX), T10b (cierre)
+- **Tipo:** docs
+- **Archivos:**
+  - M `informe/informe.pdf` — recompilado en letX por el usuario (27 págs., 740897 bytes; antes 565484 bytes)
+  - M `manual/manual_tecnico.pdf` — recompilado en letX por el usuario (15 págs., 480044 bytes; antes 403137 bytes)
+  - M `agent/CHANGELOG.md` (esta entrada), `agent/CONTEXT.md` (reescrito), `agent/TASKS.md` (T08 y T10b a ✅), `agent/DECISIONS.md` (D-39 cierra la verificación de D-38; D-40 registra el pedido de push a `main`), `agent/log/auto_changes.log` (traza automática)
+- **Qué y por qué:** el usuario compiló `informe/main.tex` y `manual/manual_tecnico.tex` en letX (pdfLaTeX, 2 pasadas), revisó los PDF y dio el visto bueno. Con eso se cierra el riesgo de `\cod` (expl3) y xurl anotado en D-38 y C-0015. Se commitean los PDF para que el repo quede con la maquetación corregida. El tag `v0.1-primera-entrega` no se mueve (sigue en `6a25d0f`).
+- **Verificación:**
+  - orquestador (reportado con pdfplumber sobre los PDF nuevos; no re-ejecutado por el scribe): 0 renglones fuera del margen derecho y 0 palabras encimadas (antes unos 20 en el informe y unos 17 en el manual); 0 "??" y 0 "[?]"; el informe contiene "Mejor caso, peor caso y caso promedio", la entrada de Khachiyan y la convención del ■; el manual contiene "Casos de complejidad" y la tabla de campos legible.
+  - scribe: `git status --short` y `git diff --stat` confirman solo los dos PDF modificados antes de esta entrada; tamaños 740897 y 480044 bytes coinciden con lo reportado.
+  - pytest: no aplica (sin cambios de código). Último resultado conocido: 273 passed (C-0014).
+  - Nota de hora: las cabeceras de C-0015 y la versión anterior de `CONTEXT.md` dicen 14:40, pero esa hora era UTC; en America/Bogota fue 09:40. No se corrigen (solo-añadir).
+  - Sin verificar: ninguna compilación la ejecutó el scribe (sin TeX local, D-20).
+- **Commit:** pendiente (el hash lo reporta el scribe al orquestador). Commit de C-0015: `fec0826`.
+- **Siguiente paso:** ejecutar `.venv/Scripts/python.exe -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out results/` y contrastar las cifras PRELIMINARES de la guía §5 con `results/caso_entrada_G2_red_15_nodos/resultado.json` (T14, R-06).
