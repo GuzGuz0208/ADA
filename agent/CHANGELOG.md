@@ -86,3 +86,30 @@
   - Sin verificar: `pytest -q` (aún no hay pruebas; T05); pandoc/LaTeX no instalados (comprobado en T00, no hace falta para T00).
 - **Commit:** `5054456` (C-0001…C-0004). El de este cambio (T00 cerrada) se anota en la siguiente entrada.
 - **Siguiente paso:** `theorist` T01 y `implementer` T04 en paralelo (ver `agent/CONTEXT.md`, "Siguiente paso inmediato").
+
+### C-0006 · 2026-11-05 22:07 · implementer (claude-sonnet-5.5), orquestado por claude-opus-5.5; registro por scribe (claude-haiku-5.5) · tarea T04
+- **Tipo:** feat
+- **Archivos:**
+  - A `pyproject.toml` — setuptools, src layout, paquete `ada_g2` 0.1.0, Python ≥3.10 (instalado con `pip install -e .` en `.venv`)
+  - A `src/ada_g2/__init__.py`, `src/ada_g2/__main__.py` — paquete y entrada `python -m ada_g2`
+  - A `src/ada_g2/io.py` — carga y validación del JSON con todos los errores y su ruta
+  - A `src/ada_g2/model.py` — u_i = a_i·ln(1+x); f de cobertura probabilística con R_j incremental (τ = O(M))
+  - A `src/ada_g2/allocate.py` — reparto voraz con montículo (heapify O(N)), topes y desempate por menor índice
+  - A `src/ada_g2/select.py` — selección voraz, modos `k` / `costo` / `ambos`, mejor-de-3 (ganancia, razón, singleton)
+  - A `src/ada_g2/exact.py` — exacto por DFS con poda; DP exacto de referencia del reparto
+  - A `src/ada_g2/certificates.py` — certificados D-14: dualidad de Lagrange (W1) y cota LP con highs (W2)
+  - A `src/ada_g2/rounds.py` — T rondas en cadena con q y políticas concentrado/uniforme
+  - A `src/ada_g2/trace.py` — traza por ronda (md y csv)
+  - A `src/ada_g2/cli.py` — subcomandos `run` y `generar`
+  - A `src/ada_g2/generator.py` — generador sintético con semilla
+  - A `tests/test_smoke.py` — 5 pruebas de humo
+  - A `results/caso_entrada_G2_red_15_nodos/` — `resultado.json`, `tiempo.csv`, `traza.md`, `traza.csv` (salida del CLI sobre el JSON de la profesora)
+  - M `agent/CONTEXT.md`, `agent/TASKS.md`, `agent/DECISIONS.md` (A D-21…D-25), `agent/log/auto_changes.log` (traza automática)
+  - No incluidos: `informe/` y `agent/SPEC.md` (los escribe el theorist en paralelo; sin commit).
+- **Qué y por qué:** base del código (T04) para que el verifier pruebe y el caso de la profesora se ejecute sin editar código. La carpeta de salida usa el nombre del JSON (`caso_entrada_G2_red_15_nodos`), no `caso_G2_15_nodos` como decía TASKS T06.
+- **Verificación:**
+  - Ejecutado por el scribe: `pytest -q` → `5 passed in 1.25s`.
+  - Reportado por el implementer (no re-ejecutado por el scribe): `pip install -e .` OK; CLI `run` sobre `project-docs/entrada_G2_red_15_nodos.json`: exit 0, «restricciones y certificados: TODO CUMPLE»; ronda 1 S={N09,N11,N13,N14,N15}, f=145.5795, costo 23; Σf=436.7386, Σu=262.7387; certificado de dualidad con brecha 0 en las 3 rondas; LP cota 151.9871, razón certificada 0.95784; modo `k` exacto f=145.9072, razón 0.99775; mediana del pipeline 8.75 ms. Coincide con SPEC §6 sin ajustar código.
+  - Sin verificar: pruebas de propiedades con hypothesis; W1 y W2 sobre ≥500 instancias (T05, verifier); W3 razones exactas; reproducción en otra máquina.
+- **Commit:** pendiente (lo anota la siguiente entrada)
+- **Siguiente paso:** `verifier` T05: crear `tests/test_propiedades.py` con hypothesis y ejecutar `.venv\Scripts\python -m pytest -q`.

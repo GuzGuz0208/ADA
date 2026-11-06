@@ -1,0 +1,626 @@
+{
+  "version": "0.1.0",
+  "caso": "entrada_G2_red_15_nodos",
+  "entorno": {
+    "python": "3.12.10",
+    "plataforma": "Windows-11-10.0.26300-SP0"
+  },
+  "parametros": {
+    "N": 15,
+    "T": 3,
+    "k": 5,
+    "B": 30,
+    "L": 24,
+    "aristas": 105,
+    "modo": "ambos",
+    "q": 0.0,
+    "politica_gasto": "concentrado",
+    "semilla": 20261105
+  },
+  "avisos": [],
+  "rondas": [
+    {
+      "ronda": 1,
+      "disponibles": [
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N15"
+      ],
+      "seleccion": [
+        "N09",
+        "N11",
+        "N13",
+        "N14",
+        "N15"
+      ],
+      "detalle_seleccion": {
+        "elegida": "voraz_ganancia",
+        "alternativas": [
+          {
+            "heuristica": "voraz_ganancia",
+            "S": [
+              "N11",
+              "N14",
+              "N09",
+              "N15",
+              "N13"
+            ],
+            "f": 145.57951999999997,
+            "costo": 23
+          },
+          {
+            "heuristica": "voraz_razon",
+            "S": [
+              "N05",
+              "N09",
+              "N14",
+              "N11",
+              "N15"
+            ],
+            "f": 145.105551875,
+            "costo": 18
+          },
+          {
+            "heuristica": "singleton",
+            "S": [
+              "N11"
+            ],
+            "f": 103.49000000000001,
+            "costo": 4
+          }
+        ]
+      },
+      "f": 145.57951999999997,
+      "costo_participacion": 23,
+      "topes_antes": {
+        "N09": 18,
+        "N11": 18,
+        "N13": 18,
+        "N14": 18,
+        "N15": 18
+      },
+      "topes_efectivos": {
+        "N09": 18,
+        "N11": 18,
+        "N13": 18,
+        "N14": 18,
+        "N15": 18
+      },
+      "reparto": {
+        "N09": 7,
+        "N11": 5,
+        "N13": 5,
+        "N14": 7,
+        "N15": 6
+      },
+      "unidades_asignadas": 30,
+      "gasto_ruido": 30,
+      "utilidad": 88.56395281034827,
+      "verificacion_restricciones": [
+        {
+          "restriccion": "|S|<=k",
+          "descripcion": "cupo de participantes",
+          "valor": 5,
+          "limite": 5,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "sum c<=L",
+          "descripcion": "costo de participacion",
+          "valor": 23,
+          "limite": 24,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "sum x<=B",
+          "descripcion": "presupuesto de ruido de la ronda",
+          "valor": 30,
+          "limite": 30,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i<=tope_i",
+          "descripcion": "tope por nodo (politica)",
+          "valor": -11,
+          "limite": 0,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i<=restante_i",
+          "descripcion": "presupuesto total restante del nodo",
+          "valor": [],
+          "limite": [],
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i>=0 entero",
+          "descripcion": "dominio",
+          "valor": 5,
+          "limite": 0,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "S subconjunto de disponibles",
+          "descripcion": "participantes disponibles",
+          "valor": [],
+          "limite": [],
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "f incremental = f directa",
+          "descripcion": "coherencia numerica",
+          "valor": 2.842170943040401e-14,
+          "limite": 1e-09,
+          "aplica": true,
+          "cumple": true
+        }
+      ],
+      "certificado_reparto": {
+        "lambda": 1.321960786982774,
+        "cota_superior": 88.56395281034827,
+        "utilidad": 88.56395281034827,
+        "brecha": 0.0,
+        "tolerancia": 1e-09,
+        "ok": true
+      },
+      "certificado_seleccion": {
+        "f_S": 145.57951999999997,
+        "extra": 6.407613,
+        "cota_superior": 151.98713299999997,
+        "razon_certificada": 0.9578410825079515,
+        "ok": true
+      },
+      "comparacion_exacto": {
+        "seleccion_optima": [
+          "N09",
+          "N11",
+          "N13",
+          "N14",
+          "N15"
+        ],
+        "f_optima": 145.57952,
+        "razon_voraz_sobre_optimo": 0.9999999999999998,
+        "subconjuntos_evaluados": 3893,
+        "subconjuntos_teoricos": 4944,
+        "reparto_dp_utilidad": 88.56395281034825,
+        "reparto_voraz_utilidad": 88.56395281034827,
+        "reparto_dif_abs": 1.4210854715202004e-14,
+        "reparto_optimo": true
+      }
+    },
+    {
+      "ronda": 2,
+      "disponibles": [
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N15"
+      ],
+      "seleccion": [
+        "N09",
+        "N11",
+        "N13",
+        "N14",
+        "N15"
+      ],
+      "detalle_seleccion": {
+        "elegida": "voraz_ganancia",
+        "alternativas": [
+          {
+            "heuristica": "voraz_ganancia",
+            "S": [
+              "N11",
+              "N14",
+              "N09",
+              "N15",
+              "N13"
+            ],
+            "f": 145.57951999999997,
+            "costo": 23
+          },
+          {
+            "heuristica": "voraz_razon",
+            "S": [
+              "N05",
+              "N09",
+              "N14",
+              "N11",
+              "N15"
+            ],
+            "f": 145.105551875,
+            "costo": 18
+          },
+          {
+            "heuristica": "singleton",
+            "S": [
+              "N11"
+            ],
+            "f": 103.49000000000001,
+            "costo": 4
+          }
+        ]
+      },
+      "f": 145.57951999999997,
+      "costo_participacion": 23,
+      "topes_antes": {
+        "N09": 11,
+        "N11": 13,
+        "N13": 13,
+        "N14": 11,
+        "N15": 12
+      },
+      "topes_efectivos": {
+        "N09": 11,
+        "N11": 13,
+        "N13": 13,
+        "N14": 11,
+        "N15": 12
+      },
+      "reparto": {
+        "N09": 7,
+        "N11": 5,
+        "N13": 5,
+        "N14": 7,
+        "N15": 6
+      },
+      "unidades_asignadas": 30,
+      "gasto_ruido": 30,
+      "utilidad": 88.56395281034827,
+      "verificacion_restricciones": [
+        {
+          "restriccion": "|S|<=k",
+          "descripcion": "cupo de participantes",
+          "valor": 5,
+          "limite": 5,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "sum c<=L",
+          "descripcion": "costo de participacion",
+          "valor": 23,
+          "limite": 24,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "sum x<=B",
+          "descripcion": "presupuesto de ruido de la ronda",
+          "valor": 30,
+          "limite": 30,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i<=tope_i",
+          "descripcion": "tope por nodo (politica)",
+          "valor": -4,
+          "limite": 0,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i<=restante_i",
+          "descripcion": "presupuesto total restante del nodo",
+          "valor": [],
+          "limite": [],
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i>=0 entero",
+          "descripcion": "dominio",
+          "valor": 5,
+          "limite": 0,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "S subconjunto de disponibles",
+          "descripcion": "participantes disponibles",
+          "valor": [],
+          "limite": [],
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "f incremental = f directa",
+          "descripcion": "coherencia numerica",
+          "valor": 2.842170943040401e-14,
+          "limite": 1e-09,
+          "aplica": true,
+          "cumple": true
+        }
+      ],
+      "certificado_reparto": {
+        "lambda": 1.321960786982774,
+        "cota_superior": 88.56395281034827,
+        "utilidad": 88.56395281034827,
+        "brecha": 0.0,
+        "tolerancia": 1e-09,
+        "ok": true
+      },
+      "certificado_seleccion": {
+        "f_S": 145.57951999999997,
+        "extra": 6.407613,
+        "cota_superior": 151.98713299999997,
+        "razon_certificada": 0.9578410825079515,
+        "ok": true
+      },
+      "comparacion_exacto": {
+        "seleccion_optima": [
+          "N09",
+          "N11",
+          "N13",
+          "N14",
+          "N15"
+        ],
+        "f_optima": 145.57952,
+        "razon_voraz_sobre_optimo": 0.9999999999999998,
+        "subconjuntos_evaluados": 3893,
+        "subconjuntos_teoricos": 4944,
+        "reparto_dp_utilidad": 88.56395281034825,
+        "reparto_voraz_utilidad": 88.56395281034827,
+        "reparto_dif_abs": 1.4210854715202004e-14,
+        "reparto_optimo": true
+      }
+    },
+    {
+      "ronda": 3,
+      "disponibles": [
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N15"
+      ],
+      "seleccion": [
+        "N09",
+        "N11",
+        "N13",
+        "N14",
+        "N15"
+      ],
+      "detalle_seleccion": {
+        "elegida": "voraz_ganancia",
+        "alternativas": [
+          {
+            "heuristica": "voraz_ganancia",
+            "S": [
+              "N11",
+              "N14",
+              "N09",
+              "N15",
+              "N13"
+            ],
+            "f": 145.57951999999997,
+            "costo": 23
+          },
+          {
+            "heuristica": "voraz_razon",
+            "S": [
+              "N05",
+              "N09",
+              "N14",
+              "N11",
+              "N15"
+            ],
+            "f": 145.105551875,
+            "costo": 18
+          },
+          {
+            "heuristica": "singleton",
+            "S": [
+              "N11"
+            ],
+            "f": 103.49000000000001,
+            "costo": 4
+          }
+        ]
+      },
+      "f": 145.57951999999997,
+      "costo_participacion": 23,
+      "topes_antes": {
+        "N09": 4,
+        "N11": 8,
+        "N13": 8,
+        "N14": 4,
+        "N15": 6
+      },
+      "topes_efectivos": {
+        "N09": 4,
+        "N11": 8,
+        "N13": 8,
+        "N14": 4,
+        "N15": 6
+      },
+      "reparto": {
+        "N09": 4,
+        "N11": 8,
+        "N13": 8,
+        "N14": 4,
+        "N15": 6
+      },
+      "unidades_asignadas": 30,
+      "gasto_ruido": 30,
+      "utilidad": 85.61077544435337,
+      "verificacion_restricciones": [
+        {
+          "restriccion": "|S|<=k",
+          "descripcion": "cupo de participantes",
+          "valor": 5,
+          "limite": 5,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "sum c<=L",
+          "descripcion": "costo de participacion",
+          "valor": 23,
+          "limite": 24,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "sum x<=B",
+          "descripcion": "presupuesto de ruido de la ronda",
+          "valor": 30,
+          "limite": 30,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i<=tope_i",
+          "descripcion": "tope por nodo (politica)",
+          "valor": 0,
+          "limite": 0,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i<=restante_i",
+          "descripcion": "presupuesto total restante del nodo",
+          "valor": [],
+          "limite": [],
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "x_i>=0 entero",
+          "descripcion": "dominio",
+          "valor": 4,
+          "limite": 0,
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "S subconjunto de disponibles",
+          "descripcion": "participantes disponibles",
+          "valor": [],
+          "limite": [],
+          "aplica": true,
+          "cumple": true
+        },
+        {
+          "restriccion": "f incremental = f directa",
+          "descripcion": "coherencia numerica",
+          "valor": 2.842170943040401e-14,
+          "limite": 1e-09,
+          "aplica": true,
+          "cumple": true
+        }
+      ],
+      "certificado_reparto": {
+        "lambda": 0.8951510709885142,
+        "cota_superior": 85.61077544435337,
+        "utilidad": 85.61077544435337,
+        "brecha": 0.0,
+        "tolerancia": 1e-09,
+        "ok": true
+      },
+      "certificado_seleccion": {
+        "f_S": 145.57951999999997,
+        "extra": 6.407613,
+        "cota_superior": 151.98713299999997,
+        "razon_certificada": 0.9578410825079515,
+        "ok": true
+      },
+      "comparacion_exacto": {
+        "seleccion_optima": [
+          "N09",
+          "N11",
+          "N13",
+          "N14",
+          "N15"
+        ],
+        "f_optima": 145.57952,
+        "razon_voraz_sobre_optimo": 0.9999999999999998,
+        "subconjuntos_evaluados": 3893,
+        "subconjuntos_teoricos": 4944,
+        "reparto_dp_utilidad": 85.61077544435338,
+        "reparto_voraz_utilidad": 85.61077544435337,
+        "reparto_dif_abs": 1.4210854715202004e-14,
+        "reparto_optimo": true
+      }
+    }
+  ],
+  "totales": {
+    "suma_f": 436.7385599999999,
+    "suma_utilidad": 262.7386810650499,
+    "gasto_por_nodo": {
+      "N09": 18,
+      "N11": 18,
+      "N13": 18,
+      "N14": 18,
+      "N15": 18
+    },
+    "presupuesto_total_nodo": {
+      "N01": 18,
+      "N02": 18,
+      "N03": 18,
+      "N04": 18,
+      "N05": 18,
+      "N06": 18,
+      "N07": 18,
+      "N08": 18,
+      "N09": 18,
+      "N10": 18,
+      "N11": 18,
+      "N12": 18,
+      "N13": 18,
+      "N14": 18,
+      "N15": 18
+    }
+  },
+  "verificacion_global": [
+    {
+      "restriccion": "sum_t x_it<=R_i",
+      "descripcion": "presupuesto total del nodo en las T rondas",
+      "valor": [],
+      "limite": [],
+      "aplica": true,
+      "cumple": true
+    }
+  ],
+  "todo_cumple": true
+}
