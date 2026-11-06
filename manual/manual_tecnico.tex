@@ -22,6 +22,8 @@
 \usepackage{xcolor}
 \usepackage{tikz}
 \usepackage[hidelinks]{hyperref}
+\usepackage{xurl}            % URL cortables en cualquier carácter
+\setlength{\emergencystretch}{3em}
 
 % ---------- Pseudocódigo en español ----------
 \floatname{algorithm}{Algoritmo}
@@ -56,7 +58,20 @@
 % ---------- Notación ----------
 \newcommand{\Nat}{\mathbb{N}}
 \newcommand{\Rea}{\mathbb{R}}
-\newcommand{\cod}[1]{\texttt{\detokenize{#1}}}
+% \cod{...}: código/rutas en monoespaciado, leído como texto literal y cortable después de
+% _ . / [ - :  (antes era \texttt{\detokenize{#1}}, que no corta y desbordaba las tablas).
+\ExplSyntaxOn
+\cs_new:Npn \__ada_cod_brk: { \discretionary{}{}{} }
+\cs_new:Npn \__ada_cod_char:n #1
+  {
+    #1
+    \str_case:nn {#1}
+      { {_}{\__ada_cod_brk:} {.}{\__ada_cod_brk:} {/}{\__ada_cod_brk:}
+        {[}{\__ada_cod_brk:} {-}{\__ada_cod_brk:} {:}{\__ada_cod_brk:} }
+  }
+\NewDocumentCommand \cod { m }
+  { \texttt { \str_map_function:nN {#1} \__ada_cod_char:n } }
+\ExplSyntaxOff
 
 \begin{document}
 
@@ -72,7 +87,7 @@ Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
 \textbf{Profesora:} Luz Enith Guerrero\\[0.3cm]
 \textbf{Grupo:} 2\\[0.3cm]
 \textbf{Repositorio:} \url{https://github.com/GuzGuz0208/ADA}\\[0.3cm]
-\textbf{Versión:} etiqueta \texttt{v0.1-primera-entrega}\\[2cm]}
+\textbf{Versión:} etiqueta \cod{v0.1-primera-entrega}\\[2cm]}
 {\large Manizales, 6 de noviembre de 2026}
 \end{titlepage}
 
@@ -81,14 +96,14 @@ Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
 
 \section*{Presentación}
 \addcontentsline{toc}{section}{Presentación}
-Este manual describe el código de \cod{src/ada_g2/} tal como está en la versión \texttt{v0.1-primera-entrega} (paquete 0.1.0). Su propósito es que otra persona entienda cómo está construida la implementación y pueda reproducir su ejecución sin explicaciones adicionales de los autores. Sigue el orden de la guía de la primera entrega (§6): Entorno, Arquitectura, Funcionamiento, Uso, Validación y límites, e Identificación y enlace.
+Este manual describe el código de \cod{src/ada_g2/} tal como está en la versión \cod{v0.1-primera-entrega} (paquete 0.1.0). Su propósito es que otra persona entienda cómo está construida la implementación y pueda reproducir su ejecución sin explicaciones adicionales de los autores. Sigue el orden de la guía de la primera entrega (§6): Entorno, Arquitectura, Funcionamiento, Uso, Validación y límites, e Identificación y enlace.
 
 Esta versión es la \textbf{solución base} de la primera entrega y \textbf{no es la solución final}: la Sección~\ref{sec:alcance} separa lo implementado de lo parcial y de lo no desarrollado. Las demostraciones (NP-dureza, optimalidad del reparto, cota $1-1/e$) están en el informe técnico (\cod{informe/main.tex}), no aquí. Los supuestos de modelado se identifican como D-xx (registro de decisiones del proyecto). Toda la salida de consola mostrada en este manual es salida real de ejecuciones del código.
 
 % =====================================================================
 \section{Entorno}\label{sec:entorno}
 
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}X@{}}
+\noindent\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}X@{}}
 \toprule
 \textbf{Elemento} & \textbf{Detalle}\\
 \midrule
@@ -97,20 +112,20 @@ Dependencias de ejecución & \cod{numpy>=1.26}, \cod{scipy>=1.11} (\cod{pyprojec
 Desarrollo y pruebas & \cod{matplotlib>=3.8}, \cod{pytest>=8.0}, \cod{hypothesis>=6.100} (\cod{requirements.txt})\\
 Sistema compatible & Probado en Windows 11 (Git Bash y PowerShell). No usa rutas absolutas ni nada específico del sistema, por lo que debería funcionar en Linux y macOS, pero allí \textbf{no se ha probado}.\\
 Instalación & \cod{python -m venv .venv}, activar el entorno, \cod{pip install -r requirements.txt}, \cod{pip install -e .}\\
-Punto de entrada & \texttt{python -m ada\_g2 run|generar|ajustada} (\cod{src/ada_g2/__main__.py} llama a \cod{cli.main})\\
+Punto de entrada & \cod{python -m ada_g2 run|generar|ajustada} (\cod{src/ada_g2/__main__.py} llama a \cod{cli.main})\\
 Semilla por defecto & 20261105 (\cod{ada_g2.SEMILLA_POR_DEFECTO}), supuesto D-11\\
 \bottomrule
 \end{tabularx}
 
 \medskip
-Activación del entorno: en Windows, \cod{.venv\Scripts\activate}; en Linux/macOS, \cod{source .venv/bin/activate}.
+Activación del entorno: en Windows, \texttt{.venv\textbackslash{}Scripts\textbackslash{}activate}; en Linux/macOS, \cod{source .venv/bin/activate}.
 
 % =====================================================================
 \section{Arquitectura}\label{sec:arquitectura}
 
 \subsection{Estructura de carpetas}
 
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}X@{}}
+\noindent\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}X@{}}
 \toprule
 \textbf{Carpeta} & \textbf{Responsabilidad}\\
 \midrule
@@ -126,7 +141,7 @@ Activación del entorno: en Windows, \cod{.venv\Scripts\activate}; en Linux/macO
 
 \subsection{Módulos de \texttt{src/ada\_g2/}}
 
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{6.2cm}>{\raggedright\arraybackslash}p{6.0cm}@{}}
 \toprule
 \textbf{Módulo} & \textbf{Responsabilidad} & \textbf{Funciones y clases principales}\\
 \midrule
@@ -319,7 +334,7 @@ Esquema de la profesora (\cod{project-docs/entrada_G2_red_15_nodos.json}). Todos
 }
 \end{lstlisting}
 
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{5.6cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{5.6cm}@{}}
 \toprule
 \textbf{Campo} & \textbf{Tipo y regla} & \textbf{Significado en el código}\\
 \midrule
@@ -421,7 +436,7 @@ cota alcanzada exactamente
 
 Cada \cod{run} escribe cuatro archivos en \cod{<carpeta>/caso_<nombre>/}.
 
-\paragraph{\texttt{resultado.json}.} Campos principales:
+\paragraph{\cod{resultado.json}.} Campos principales:
 
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{10.6cm}@{}}
 \toprule
@@ -467,7 +482,7 @@ Cada elemento de \cod{rondas[]} contiene:
 
 \subsection{Códigos de salida}\label{sec:codigos}
 
-\begin{tabularx}{\textwidth}{@{}cX@{}}
+\noindent\begin{tabularx}{\textwidth}{@{}cX@{}}
 \toprule
 \textbf{Código} & \textbf{Significado}\\
 \midrule
@@ -533,7 +548,7 @@ En el caso de la profesora (modo \cod{ambos}) la razón voraz/óptimo es 1.0000 
 
 \subsection{Alcance: solución base frente a variantes}\label{sec:alcance}
 
-Esta versión (\texttt{v0.1-primera-entrega}) es la \textbf{solución base} de la primera entrega y \textbf{no es la solución final}.
+Esta versión (\cod{v0.1-primera-entrega}) es la \textbf{solución base} de la primera entrega y \textbf{no es la solución final}.
 
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{8.8cm}@{}}
 \toprule
@@ -559,7 +574,7 @@ Validación experimental ($\ge 5$ tamaños, gráfica tiempo frente a $n$ contra 
 \item \textbf{Curso:} Análisis y Diseño de Algoritmos 2026-B. \textbf{Profesora:} Luz Enith Guerrero. \textbf{Universidad de Caldas.}
 \item \textbf{Subproyecto 2 (Grupo 2):} Reparto de presupuesto y selección de participantes.
 \item \textbf{Integrante:} Juan Esteban Guzmán Henao (trabajo individual).
-\item \textbf{Repositorio:} \url{https://github.com/GuzGuz0208/ADA}, rama \texttt{main}, etiqueta \texttt{v0.1-primera-entrega}.
+\item \textbf{Repositorio:} \url{https://github.com/GuzGuz0208/ADA}, rama \texttt{main}, etiqueta \cod{v0.1-primera-entrega}.
 \item \textbf{Informe:} \cod{informe/main.tex} (y \cod{informe/INFORME.md}). \textbf{Resultados:} \cod{results/caso_entrada_G2_red_15_nodos/}.
 \end{itemize}
 

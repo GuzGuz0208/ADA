@@ -12,11 +12,11 @@ Una red de $N$ nodos entrena colaborativamente un modelo durante $T$ rondas sin 
 Siguiendo la Figura 3.1 del enunciado, las dos partes se resuelven \emph{en cadena} dentro de cada ronda: primero se elige el conjunto $S_t$ y luego se reparte el presupuesto de la ronda entre los nodos de $S_t$ (D-08). Cada parte es un problema de optimización distinto, con su propio tamaño de entrada, y se formaliza por separado.
 
 \subsection{Datos comunes y esquema de la instancia}\label{sec:datos}
-La profesora entrega instancias en JSON con el esquema de \texttt{entrada\_G2\_red\_15\_nodos.json} y puede ejecutar \emph{otras} instancias con el mismo esquema; por eso ningún valor de la instancia se fija en el código. El esquema contiene:
+La profesora entrega instancias en JSON con el esquema de \cod{entrada_G2_red_15_nodos.json} y puede ejecutar \emph{otras} instancias con el mismo esquema; por eso ningún valor de la instancia se fija en el código. El esquema contiene:
 \begin{itemize}[leftmargin=*]
 \item \texttt{parametros}: número de nodos $N$, número de rondas $T$, cupo por ronda $k$, presupuesto de ruido por ronda $B$, presupuesto de costos de participación por ronda $L$.
-\item \texttt{nodos}: para cada nodo $i$, \texttt{coeficiente\_utilidad} $a_i>0$, \texttt{presupuesto\_total\_nodo} $R_i\in\Nat$ y \texttt{costo\_participacion} $c_i\in\Nat$.
-\item \texttt{grafo}: aristas $\{u,v\}$ con \texttt{peso\_influencia} $w_{uv}\in[0,1]$.
+\item \texttt{nodos}: para cada nodo $i$, \cod{coeficiente_utilidad} $a_i>0$, \cod{presupuesto_total_nodo} $R_i\in\Nat$ y \cod{costo_participacion} $c_i\in\Nat$.
+\item \texttt{grafo}: aristas $\{u,v\}$ con \cod{peso_influencia} $w_{uv}\in[0,1]$.
 \end{itemize}
 En la instancia de la profesora, $N=15$, $T=3$, $k=5$, $B=30$, $L=24$ y el grafo trae $105=\binom{15}{2}$ aristas, cada par una sola vez. Los resultados obtenidos sobre esa instancia, producidos por el código con la semilla 20261105, se reportan en la Sección~\ref{sec:caso}.
 
@@ -60,7 +60,7 @@ Si algún $a_i=0$ (fuera del esquema, que exige $a_i>0$), $g_i\equiv 0$: $u_i$ s
 \end{definicion}
 
 \begin{observacion}[relación con la Definición 3.2.1 del enunciado]
-El enunciado no incluye topes por nodo. Con $r_i\ge B$ para todo $i$ el tope nunca es activo y se recupera exactamente la Definición 3.2.1. Los topes se añaden porque el JSON trae \texttt{presupuesto\_total\_nodo} y el escenario dice que ese presupuesto es total para las $T$ rondas; en la instancia de la profesora sí llegan a ser activos: en la ronda 3 los topes restantes (4, 8, 8, 4, 6) coinciden con el reparto y suman $B=30$ (Sección~\ref{sec:caso}, Tabla~\ref{tab:rondas}; origen: \texttt{results/caso\_entrada\_G2\_red\_15\_nodos/resultado.json}).
+El enunciado no incluye topes por nodo. Con $r_i\ge B$ para todo $i$ el tope nunca es activo y se recupera exactamente la Definición 3.2.1. Los topes se añaden porque el JSON trae \cod{presupuesto_total_nodo} y el escenario dice que ese presupuesto es total para las $T$ rondas; en la instancia de la profesora sí llegan a ser activos: en la ronda 3 los topes restantes (4, 8, 8, 4, 6) coinciden con el reparto y suman $B=30$ (Sección~\ref{sec:caso}, Tabla~\ref{tab:rondas}; origen: \cod{results/caso_entrada_G2_red_15_nodos/resultado.json}).
 \end{observacion}
 
 \paragraph{Tamaño de la entrada: $(N,B)$.} Crecen dos magnitudes independientes:
@@ -83,7 +83,7 @@ No se reduce a una sola variable porque el costo del algoritmo (Sección~\ref{se
 \[
 f(S)=\sum_{j=1}^{M}a_j\Bigl[1-\prod_{i\in S}(1-w_{ij})\Bigr],\qquad f(\emptyset)=0 .
 \]
-Interpretación: $w_{ij}$ es la probabilidad de que el candidato $i$ ``cubra'' (influya en) el objetivo $j$, de forma independiente; $f(S)$ es el peso esperado de objetivos cubiertos. \textbf{En el JSON}, candidatos y objetivos son los mismos $N$ nodos ($M=N$), $a_j$ es el \texttt{coeficiente\_utilidad}, $w_{ij}=w_{ji}=$ \texttt{peso\_influencia} (grafo no dirigido, D-10) y $w_{ii}=1$ (un nodo elegido se cubre a sí mismo); los pares ausentes del grafo tienen $w_{ij}=0$.
+Interpretación: $w_{ij}$ es la probabilidad de que el candidato $i$ ``cubra'' (influya en) el objetivo $j$, de forma independiente; $f(S)$ es el peso esperado de objetivos cubiertos. \textbf{En el JSON}, candidatos y objetivos son los mismos $N$ nodos ($M=N$), $a_j$ es el \cod{coeficiente_utilidad}, $w_{ij}=w_{ji}=$ \cod{peso_influencia} (grafo no dirigido, D-10) y $w_{ii}=1$ (un nodo elegido se cubre a sí mismo); los pares ausentes del grafo tienen $w_{ij}=0$.
 
 \paragraph{Ganancia marginal.} Para $S\subseteq V$ e $i\notin S$, sea $R_j(S)=\prod_{l\in S}(1-w_{lj})\in[0,1]$. Entonces
 \begin{equation}\label{eq:delta}
@@ -124,7 +124,7 @@ El enunciado pide ``el subconjunto de tamaño $k$''. En el modo \texttt{k} ambas
 
 \paragraph{Supuestos específicos.} Grafo no dirigido y simétrico (D-10; la dirección no está especificada, Q-04); independencia de las influencias (modelo de cobertura probabilística, D-02); $q=0$ para el caso de la profesora (D-07); desempates por menor índice (D-12). En una ronda $t$ los candidatos son los nodos que no fallaron (con $q=0$, todos).
 
-\paragraph{Alcance.} Esta parte es NP-difícil (Sección~\ref{sec:np}); se resuelve con el voraz de mayor ganancia marginal, con garantía $1-1/e$ \emph{solo en el modo} \texttt{k} (Sección~\ref{sec:cota}), y con fuerza bruta en instancias pequeñas para medir la razón real. Para el modo \texttt{ambos} se usa el mejor de tres voraces factibles (por ganancia, por razón ganancia/costo y el mejor nodo individual) y \textbf{no se afirma garantía teórica} para la combinación cupo+costo (R-01); la calidad se mide contra el exacto por fuerza bruta (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos) y se reporta en la Sección~\ref{sec:caso} (en el caso de la profesora, $f(S)/f(S^\ast)=1.0000$ en el modo \texttt{ambos}, con $3\,893$ subconjuntos factibles evaluados; origen: \texttt{resultado.json}, campo \texttt{comparacion\_exacto}).
+\paragraph{Alcance.} Esta parte es NP-difícil (Sección~\ref{sec:np}); se resuelve con el voraz de mayor ganancia marginal, con garantía $1-1/e$ \emph{solo en el modo} \texttt{k} (Sección~\ref{sec:cota}), y con fuerza bruta en instancias pequeñas para medir la razón real. Para el modo \texttt{ambos} se usa el mejor de tres voraces factibles (por ganancia, por razón ganancia/costo y el mejor nodo individual) y \textbf{no se afirma garantía teórica} para la combinación cupo+costo (R-01); la calidad se mide contra el exacto por fuerza bruta (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos) y se reporta en la Sección~\ref{sec:caso} (en el caso de la profesora, $f(S)/f(S^\ast)=1.0000$ en el modo \texttt{ambos}, con $3\,893$ subconjuntos factibles evaluados; origen: \cod{resultado.json}, campo \cod{comparacion_exacto}).
 
 % ------------------------------------------------------------
 \subsection{Supuestos de modelado y alcance de la entrega}\label{sec:supuestos}
@@ -136,7 +136,7 @@ El enunciado pide ``el subconjunto de tamaño $k$''. En el modo \texttt{k} ambas
 \toprule
 ID & Supuesto & Dónde se usa\\
 \midrule
-D-01 & $u_i(x)=a_i\ln(1+x)$, $x\in\Nat$, $a_i=$ \texttt{coeficiente\_utilidad} & Parte 1, Lema~\ref{lem:concava}\\
+D-01 & $u_i(x)=a_i\ln(1+x)$, $x\in\Nat$, $a_i=$ \cod{coeficiente_utilidad} & Parte 1, Lema~\ref{lem:concava}\\
 D-02 & $f(S)=\sum_j a_j[1-\prod_{i\in S}(1-w_{ij})]$, $w_{ii}=1$; familia general $N\times M$ & Parte 2, Lema~\ref{lem:submodular}, reducción\\
 D-03 & Base con cupo \textbf{y} costo a la vez ($|S|\le k$, $\sum c_i\le L$); modos \texttt{k} y \texttt{costo} por bandera & Def.~\ref{def:seleccion}\\
 D-04 & Alcance: primera entrega y extras si alcanza (P0$\to$P1$\to$P2) & Toda la entrega\\
@@ -145,7 +145,7 @@ D-06 & Topes por nodo $r_i=R_i-$ gastado en rondas previas & Def.~\ref{def:repar
 D-07 & $q=0$ en el caso de la profesora; barrido de $q$ como extra & Rondas\\
 D-08 & Partes resueltas en cadena por ronda (Parte 2 $\to$ Parte 1) & Contexto\\
 D-10 & Grafo no dirigido y simétrico & $W$\\
-D-11 & Tiempos con \texttt{perf\_counter}, mediana de $\ge5$ repeticiones, semilla 20261105 & Validación\\
+D-11 & Tiempos con \cod{perf_counter}, mediana de $\ge5$ repeticiones, semilla 20261105 & Validación\\
 D-12 & Desempates por menor índice de nodo & Ambos voraces\\
 D-13 & $\ln$ natural; $B$ y costos enteros; \texttt{float64} con tolerancia $10^{-9}$ en pruebas & Ambas partes\\
 \bottomrule

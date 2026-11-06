@@ -4,13 +4,13 @@
 % ============================================================
 \section{Ejecución del caso de la profesora}\label{sec:caso}
 
-Esta sección reporta lo que produjo el código sobre \texttt{project-docs/entrada\_G2\_red\_15\_nodos.json} con
-\texttt{python -m ada\_g2 run}. \textbf{Nada de lo que sigue se calculó a mano}: cada cifra se toma de uno de los cuatro archivos de
-\texttt{results/caso\_entrada\_G2\_red\_15\_nodos/} (\texttt{resultado.json}, \texttt{tiempo.csv}, \texttt{traza.md}, \texttt{traza.csv}) y la fuente se indica
+Esta sección reporta lo que produjo el código sobre \cod{project-docs/entrada_G2_red_15_nodos.json} con
+\cod{python -m ada_g2 run}. \textbf{Nada de lo que sigue se calculó a mano}: cada cifra se toma de uno de los cuatro archivos de
+\cod{results/caso_entrada_G2_red_15_nodos/} (\cod{resultado.json}, \texttt{tiempo.csv}, \texttt{traza.md}, \texttt{traza.csv}) y la fuente se indica
 junto a cada tabla. Salvo que se diga otra cosa, las cifras reales se muestran con cuatro decimales. Parámetros de la corrida
-(\texttt{resultado.json}, campo \texttt{parametros}): $N=15$, $T=3$, $k=5$, $B=30$, $L=24$, $105$ aristas, modo \texttt{ambos}
+(\cod{resultado.json}, campo \texttt{parametros}): $N=15$, $T=3$, $k=5$, $B=30$, $L=24$, $105$ aristas, modo \texttt{ambos}
 (cupo $k$ y costo $L$ a la vez, D-03), $q=0$ (D-07), política de gasto \texttt{concentrado} (D-22), semilla $20261105$. Entorno
-(\texttt{resultado.json}, campo \texttt{entorno}): Python 3.12.10, Windows-11-10.0.26300-SP0. El campo \texttt{avisos} está vacío y
+(\cod{resultado.json}, campo \texttt{entorno}): Python 3.12.10, Windows-11-10.0.26300-SP0. El campo \texttt{avisos} está vacío y
 \texttt{todo\_cumple} vale \texttt{true}.
 
 % ------------------------------------------------------------
@@ -19,26 +19,29 @@ junto a cada tabla. Salvo que se diga otra cosa, las cifras reales se muestran c
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}c l c c l c c@{}}
+\setlength{\tabcolsep}{4pt}
+% El \resizebox solo reduce si la tabla es más ancha que el renglón; si cabe, la deja igual.
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{%
+\begin{tabular}{@{}c l r c c c r@{}}
 \toprule
-Ronda & Selección $S_t$ & $f(S_t)$ & $\sum c_i$ & Reparto (N09/N11/N13/N14/N15) & Topes efectivos & $\sum_i u_i(x_i)$\\
+Ronda & Selección $S_t$ & $f(S_t)$ & $\sum_{i\in S_t} c_i$ & Reparto $x$ & Topes efectivos & $\sum_i u_i(x_i)$\\
 \midrule
-1 & N09, N11, N13, N14, N15 & 145.5795 & 23 & 7 / 5 / 5 / 7 / 6 & 18 / 18 / 18 / 18 / 18 & 88.5640\\
-2 & N09, N11, N13, N14, N15 & 145.5795 & 23 & 7 / 5 / 5 / 7 / 6 & 11 / 13 / 13 / 11 / 12 & 88.5640\\
-3 & N09, N11, N13, N14, N15 & 145.5795 & 23 & 4 / 8 / 8 / 4 / 6 & 4 / 8 / 8 / 4 / 6 & 85.6108\\
+1 & N09, N11, N13, N14, N15 & 145.5795 & 23 & 7/5/5/7/6 & 18/18/18/18/18 & 88.5640\\
+2 & N09, N11, N13, N14, N15 & 145.5795 & 23 & 7/5/5/7/6 & 11/13/13/11/12 & 88.5640\\
+3 & N09, N11, N13, N14, N15 & 145.5795 & 23 & 4/8/8/4/6 & 4/8/8/4/6 & 85.6108\\
 \midrule
-\multicolumn{2}{l}{Totales} & $\sum_t f=436.7386$ & & & & $\sum_t u=262.7387$\\
+\multicolumn{2}{@{}l}{Totales} & 436.7386 & & & & 262.7387\\
 \bottomrule
-\end{tabular}
-\caption{Resultado por ronda. Origen: \texttt{resultado.json}, campos \texttt{rondas[].seleccion}, \texttt{f}, \texttt{costo\_participacion}, \texttt{reparto}, \texttt{topes\_efectivos}, \texttt{utilidad} y \texttt{totales.suma\_f}, \texttt{totales.suma\_utilidad}.}\label{tab:rondas}
+\end{tabular}}
+\caption{Resultado por ronda. Reparto y topes en el orden N09/N11/N13/N14/N15; la fila Totales es $\sum_t f(S_t)$ y $\sum_t\sum_i u_i(x_i)$. Origen: \texttt{resultado.json}, campos \texttt{rondas[].seleccion}, \texttt{f}, \texttt{costo\_participacion}, \texttt{reparto}, \texttt{topes\_efectivos}, \texttt{utilidad} y \texttt{totales.suma\_f}, \texttt{totales.suma\_utilidad}.}\label{tab:rondas}
 \end{table}
 
-\paragraph{Lectura.} (i) Con $q=0$ y ningún nodo agotado, el criterio de selección no cambia entre rondas (D-21): $S_1=S_2=S_3$. Solo cambia el reparto, porque los topes restantes $r_i(t)$ bajan (D-06). (ii) Los topes \emph{sí} son activos en la ronda 3: tras las rondas 1 y 2 cada participante ha gastado $7+7=14$, $5+5=10$, $5+5=10$, $7+7=14$ y $6+6=12$ unidades, le quedan $4,8,8,4,6$ (suman $30=B$) y el reparto de la ronda 3 coincide con esos topes. En esa ronda no hay nada que optimizar sobre la repartición: toda la capacidad restante se usa. (iii) Cada uno de los cinco participantes termina con gasto total $18$, igual a su \texttt{presupuesto\_total\_nodo} (\texttt{resultado.json}, \texttt{totales.gasto\_por\_nodo} y \texttt{totales.presupuesto\_total\_nodo}).
+\paragraph{Lectura.} (i) Con $q=0$ y ningún nodo agotado, el criterio de selección no cambia entre rondas (D-21): $S_1=S_2=S_3$. Solo cambia el reparto, porque los topes restantes $r_i(t)$ bajan (D-06). (ii) Los topes \emph{sí} son activos en la ronda 3: tras las rondas 1 y 2 cada participante ha gastado $7+7=14$, $5+5=10$, $5+5=10$, $7+7=14$ y $6+6=12$ unidades, le quedan $4,8,8,4,6$ (suman $30=B$) y el reparto de la ronda 3 coincide con esos topes. En esa ronda no hay nada que optimizar sobre la repartición: toda la capacidad restante se usa. (iii) Cada uno de los cinco participantes termina con gasto total $18$, igual a su \cod{presupuesto_total_nodo} (\cod{resultado.json}, \cod{totales.gasto_por_nodo} y \cod{totales.presupuesto_total_nodo}).
 
 % ------------------------------------------------------------
 \subsection{Traza resumida de la ronda 1}
 
-\paragraph{Selección (Parte 2), heurística elegida: \texttt{voraz\_ganancia}.} Origen: \texttt{traza.md}, sección «Ronda 1 / Selección», con seis decimales como allí. La última columna da el mejor competidor en ese paso, es decir, el segundo mayor de las ganancias marginales de los candidatos factibles (columna «ganancias de los candidatos factibles» de \texttt{traza.md}).
+\paragraph{Selección (Parte 2), heurística elegida: \cod{voraz_ganancia}.} Origen: \texttt{traza.md}, sección «Ronda 1 / Selección», con seis decimales como allí. La última columna da el mejor competidor en ese paso, es decir, el segundo mayor de las ganancias marginales de los candidatos factibles (columna «ganancias de los candidatos factibles» de \texttt{traza.md}).
 
 \begin{table}[h]
 \centering
@@ -57,7 +60,7 @@ Paso & Elegido & Ganancia marginal $\Delta(i\mid S)$ & Costo acum. & $f$ acum. &
 \caption{Las cinco elecciones del voraz en la ronda 1. Las ganancias decrecen paso a paso (submodularidad, Lema~\ref{lem:submodular}) y la suma de las ganancias marginales es $f(S)$.}\label{tab:traza-sel}
 \end{table}
 
-Las otras dos heurísticas del modo \texttt{ambos} dieron (\texttt{resultado.json}, \texttt{rondas[0].detalle\_seleccion.alternativas}): \texttt{voraz\_razon}, $S=\{$N05, N09, N14, N11, N15$\}$ con $f=145.1056$ y costo $18$; y \texttt{singleton}, $S=\{$N11$\}$ con $f=103.4900$ y costo $4$. Se elige la de mayor $f$ (empate: la primera en el orden ganancia, razón, singleton; D-23). El voraz por ganancia termina con $k=5$ nodos elegidos (cupo agotado) y costo $23\le24$.
+Las otras dos heurísticas del modo \texttt{ambos} dieron (\cod{resultado.json}, \cod{rondas[0].detalle_seleccion.alternativas}): \texttt{voraz\_razon}, $S=\{$N05, N09, N14, N11, N15$\}$ con $f=145.1056$ y costo $18$; y \texttt{singleton}, $S=\{$N11$\}$ con $f=103.4900$ y costo $4$. Se elige la de mayor $f$ (empate: la primera en el orden ganancia, razón, singleton; D-23). El voraz por ganancia termina con $k=5$ nodos elegidos (cupo agotado) y costo $23\le24$.
 
 \paragraph{Reparto (Parte 1), unidad a unidad.} Participantes N09, N11, N13, N14, N15; tope de cada uno $18$. Origen: \texttt{traza.md}, sección «Reparto (Parte 1), unidad a unidad».
 
@@ -85,7 +88,7 @@ El reparto final es N09$=7$, N11$=5$, N13$=5$, N14$=7$, N15$=6$ con utilidad $88
 % ------------------------------------------------------------
 \subsection{Verificación de restricciones}\label{sec:verificacion}
 
-El código comprueba explícitamente, por ronda, las siete restricciones y la coherencia numérica de la Tabla~\ref{tab:verif}, y al final la restricción global del presupuesto total por nodo. Origen: \texttt{resultado.json}, campo \texttt{rondas[].verificacion\_restricciones} y \texttt{verificacion\_global}; la columna «valor» corresponde a la ronda 1.
+El código comprueba explícitamente, por ronda, las siete restricciones y la coherencia numérica de la Tabla~\ref{tab:verif}, y al final la restricción global del presupuesto total por nodo. Origen: \cod{resultado.json}, campo \cod{rondas[].verificacion_restricciones} y \cod{verificacion_global}; la columna «valor» corresponde a la ronda 1.
 
 \begin{table}[h]
 \centering
@@ -112,23 +115,23 @@ En la fila de tope por nodo, «valor» es el máximo de $x_i-\text{tope}_i$ entr
 % ------------------------------------------------------------
 \subsection{Certificados y comparación con el exacto}\label{sec:certificados}
 
-\paragraph{Certificados por ejecución (D-14; demostrados en el código, no asumidos).} Origen: \texttt{resultado.json}, \texttt{certificado\_reparto} y \texttt{certificado\_seleccion}.
+\paragraph{Certificados por ejecución (D-14; demostrados en el código, no asumidos).} Origen: \cod{resultado.json}, \cod{certificado_reparto} y \cod{certificado_seleccion}.
 \begin{itemize}[leftmargin=*]
 \item \emph{Parte 1, cota de dualidad de Lagrange.} Rondas 1 y 2: $\lambda=1.3220$; ronda 3: $\lambda=0.8952$. En las tres rondas la cota superior coincide con la utilidad obtenida ($88.5640$, $88.5640$ y $85.6108$) y la \textbf{brecha de dualidad es $0$} (tolerancia $10^{-9}$): el reparto es óptimo sin necesidad de conocer el óptimo por otro método.
 \item \emph{Parte 2, cota a posteriori por programación lineal.} En las tres rondas $f(S)=145.5795$, el programa lineal acota lo que podría añadir cualquier otro conjunto factible en $6.4076$, y la \textbf{cota superior del óptimo es $151.9871$}. La \textbf{razón certificada es $0.9578$}: $f(S)\ge0.9578\cdot\OPT$, con las restricciones de cupo y costo a la vez. Este certificado vale aunque el modo \texttt{ambos} no tenga garantía a priori (R-01).
 \end{itemize}
 
-\paragraph{Comparación con el exacto (referencia de validación, no parte del algoritmo).} Origen: \texttt{resultado.json}, \texttt{rondas[].comparacion\_exacto}.
+\paragraph{Comparación con el exacto (referencia de validación, no parte del algoritmo).} Origen: \cod{resultado.json}, \cod{rondas[].comparacion_exacto}.
 \begin{itemize}[leftmargin=*]
-\item \emph{Modo \texttt{ambos} (el de la ejecución).} La fuerza bruta evalúa $3\,893$ subconjuntos factibles de los $4\,944$ posibles de tamaño $\le5$ (contando el vacío; $4\,943$ no vacíos, como en la Sección~\ref{sec:supuestos}). El óptimo es $S^\ast=\{$N09, N11, N13, N14, N15$\}$ con $f^\ast=145.5795$, el mismo conjunto del voraz: \textbf{razón voraz/óptimo $=1.0000$}. En las tres rondas el reparto del voraz coincide con el de la programación dinámica: $88.5640$, $88.5640$ y $85.6108$ (diferencia absoluta $1.4211\times10^{-14}$, \texttt{reparto\_optimo}$=$\texttt{true}).
-\item \emph{Modo \texttt{k} (solo cupo, sin costo).} Cifras de \texttt{tests/test\_caso\_profesora.py} (reproducibles con \texttt{--modo k}; no forman parte de los archivos de \texttt{results/} porque la corrida entregada es en modo \texttt{ambos}): el óptimo con $|S|\le5$ es $S^\ast=\{$N09, N11, N12, N13, N15$\}$ con $f^\ast=145.9072$, explorando $4\,944$ subconjuntos, y el voraz ($f=145.5795$) logra la razón $0.99775$ ($=145.5795/145.9072$). La garantía teórica en este modo es $1-(1-1/5)^5=2101/3125=0.67232\ge1-1/e\approx0.6321$ (Teorema~\ref{teo:nwf}); la razón observada la supera con holgura.
+\item \emph{Modo \texttt{ambos} (el de la ejecución).} La fuerza bruta evalúa $3\,893$ subconjuntos factibles de los $4\,944$ posibles de tamaño $\le5$ (contando el vacío; $4\,943$ no vacíos, como en la Sección~\ref{sec:supuestos}). El óptimo es $S^\ast=\{$N09, N11, N13, N14, N15$\}$ con $f^\ast=145.5795$, el mismo conjunto del voraz: \textbf{razón voraz/óptimo $=1.0000$}. En las tres rondas el reparto del voraz coincide con el de la programación dinámica: $88.5640$, $88.5640$ y $85.6108$ (diferencia absoluta $1.4211\times10^{-14}$, \cod{reparto_optimo}$=$\texttt{true}).
+\item \emph{Modo \texttt{k} (solo cupo, sin costo).} Cifras de \cod{tests/test_caso_profesora.py} (reproducibles con \texttt{--modo k}; no forman parte de los archivos de \texttt{results/} porque la corrida entregada es en modo \texttt{ambos}): el óptimo con $|S|\le5$ es $S^\ast=\{$N09, N11, N12, N13, N15$\}$ con $f^\ast=145.9072$, explorando $4\,944$ subconjuntos, y el voraz ($f=145.5795$) logra la razón $0.99775$ ($=145.5795/145.9072$). La garantía teórica en este modo es $1-(1-1/5)^5=2101/3125=0.67232\ge1-1/e\approx0.6321$ (Teorema~\ref{teo:nwf}); la razón observada la supera con holgura.
 \end{itemize}
 Una razón de $1.0000$ en un único caso \textbf{no es una garantía}: es una medición. La garantía es la del Teorema~\ref{teo:nwf}, solo en el modo \texttt{k}.
 
 % ------------------------------------------------------------
 \subsection{Tiempos de ejecución}\label{sec:tiempos}
 
-Medición con \texttt{time.perf\_counter}, un calentamiento sin medir y $5$ repeticiones (D-11); se reporta la mediana. Origen: \texttt{tiempo.csv} (columna \texttt{mediana\_s}, convertida a milisegundos sin redondeo adicional).
+Medición con \cod{time.perf_counter}, un calentamiento sin medir y $5$ repeticiones (D-11); se reporta la mediana. Origen: \texttt{tiempo.csv} (columna \texttt{mediana\_s}, convertida a milisegundos sin redondeo adicional).
 
 \begin{table}[h]
 \centering
@@ -137,14 +140,14 @@ Medición con \texttt{time.perf\_counter}, un calentamiento sin medir y $5$ repe
 \toprule
 Fase & Mediana (ms) & Fase & Mediana (ms)\\
 \midrule
-\texttt{carga\_json} & 0.5687 & \texttt{seleccion\_r1} & 0.4073\\
+\texttt{carga\_json} & 0.5687 & \cod{seleccion_r1} & 0.4073\\
 \texttt{seleccion} (3 rondas) & 1.2734 & \texttt{reparto\_r1} & 0.0433\\
-\texttt{reparto} (3 rondas) & 0.1350 & \texttt{seleccion\_r2} & 0.4279\\
+\texttt{reparto} (3 rondas) & 0.1350 & \cod{seleccion_r2} & 0.4279\\
 \texttt{verificacion} & 0.0526 & \texttt{reparto\_r2} & 0.0416\\
-\texttt{certificados} & 5.2023 & \texttt{seleccion\_r3} & 0.3949\\
-\texttt{pipeline\_total} & 6.6853 & \texttt{reparto\_r3} & 0.0484\\
+\texttt{certificados} & 5.2023 & \cod{seleccion_r3} & 0.3949\\
+\cod{pipeline_total} & 6.6853 & \texttt{reparto\_r3} & 0.0484\\
 \midrule
-\multicolumn{4}{l}{\texttt{referencia\_exacta} (1 sola corrida, fuerza bruta + DP de las 3 rondas): 51.2363 ms}\\
+\multicolumn{4}{l}{\cod{referencia_exacta} (1 sola corrida, fuerza bruta + DP de las 3 rondas): 51.2363 ms}\\
 \bottomrule
 \end{tabular}
 \caption{Tiempos medianos del caso de la profesora. Los certificados (programa lineal incluido) dominan el pipeline; el algoritmo de selección y de reparto, sin certificados, cuesta $1.2734+0.1350=1.4084$ ms.}\label{tab:tiempos}
@@ -155,7 +158,7 @@ Con una sola instancia ($N=15$) estos tiempos no permiten estimar la curva $T(n)
 % ------------------------------------------------------------
 \subsection{Advertencia de saturación (R-02)}\label{sec:saturacion}
 
-La instancia de la profesora es un grafo completo con pesos $\ge0.2$. Como $f(S)=\sum_j a_j[1-\prod_{i\in S}(1-w_{ij})]$ y cada nodo queda cubierto con probabilidad cercana a $1$ por cualquier conjunto de cinco, $f$ \textbf{se satura}: $f(V)=\sum_ja_j=147.8$ (suma de \texttt{coeficiente\_utilidad} en \texttt{project-docs/entrada\_G2\_red\_15\_nodos.json}) y la selección de la ronda 1 alcanza $145.5795/147.8=0.9850$ de ese máximo. Consecuencias que conviene decir con claridad:
+La instancia de la profesora es un grafo completo con pesos $\ge0.2$. Como $f(S)=\sum_j a_j[1-\prod_{i\in S}(1-w_{ij})]$ y cada nodo queda cubierto con probabilidad cercana a $1$ por cualquier conjunto de cinco, $f$ \textbf{se satura}: $f(V)=\sum_ja_j=147.8$ (suma de \cod{coeficiente_utilidad} en \cod{project-docs/entrada_G2_red_15_nodos.json}) y la selección de la ronda 1 alcanza $145.5795/147.8=0.9850$ de ese máximo. Consecuencias que conviene decir con claridad:
 \begin{itemize}[leftmargin=*]
 \item Las tres heurísticas del modo \texttt{ambos} dan valores cercanos (\texttt{voraz\_razon}: $145.1056$, diferencia $0.4740$ frente al voraz por ganancia), y el óptimo coincide con el voraz. El caso \textbf{discrimina poco} entre selecciones.
 \item Por eso este caso no es evidencia fuerte de la calidad de la aproximación. La verificación de la cota $1-1/e$ se hace sobre familias sintéticas (Sección~\ref{sec:cota}, párrafo de verificación empírica) y sobre la instancia ajustada de D-15, no sobre este grafo.

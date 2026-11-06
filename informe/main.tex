@@ -15,7 +15,26 @@
 \usepackage{enumitem}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
+\usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
+\usepackage{xurl}            % URL cortables en cualquier carácter
+
+% ---------- Evitar renglones que se salen del margen ----------
+\setlength{\emergencystretch}{3em}
+% \cod{...}: código/rutas en monoespaciado que SÍ se pueden cortar después de _ . / [ - :
+% (\texttt normal no corta y desborda el margen). El argumento se lee como texto literal.
+\ExplSyntaxOn
+\cs_new:Npn \__ada_cod_brk: { \discretionary{}{}{} }
+\cs_new:Npn \__ada_cod_char:n #1
+  {
+    #1
+    \str_case:nn {#1}
+      { {_}{\__ada_cod_brk:} {.}{\__ada_cod_brk:} {/}{\__ada_cod_brk:}
+        {[}{\__ada_cod_brk:} {-}{\__ada_cod_brk:} {:}{\__ada_cod_brk:} }
+  }
+\NewDocumentCommand \cod { m }
+  { \texttt { \str_map_function:nN {#1} \__ada_cod_char:n } }
+\ExplSyntaxOff
 
 % ---------- Entornos de teoremas ----------
 \theoremstyle{plain}
@@ -67,7 +86,7 @@ Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
 \textbf{Profesora:} Luz Enith Guerrero\\[0.3cm]
 \textbf{Grupo:} 2\\[0.3cm]
 \textbf{Repositorio:} \url{https://github.com/GuzGuz0208/ADA}\\[0.3cm]
-\textbf{Versión:} etiqueta \texttt{v0.1-primera-entrega}\\[2cm]}
+\textbf{Versión:} etiqueta \cod{v0.1-primera-entrega}\\[2cm]}
 {\large Manizales, 6 de noviembre de 2026}
 \end{titlepage}
 
@@ -78,8 +97,9 @@ Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
 \addcontentsline{toc}{section}{Convenciones del documento}
 \begin{itemize}[leftmargin=*]
 \item \textbf{Demostrado por nosotros} vs.\ \textbf{citado}: cada resultado indica si la prueba está completa en este informe o si se toma de la bibliografía. Las referencias que no se han podido confirmar con la fuente original llevan \VER.
-\item \textbf{Cifras del caso de la profesora}: todas provienen de la ejecución de \texttt{python -m ada\_g2 run \dots} con la semilla 20261105 y están en \texttt{results/caso\_entrada\_G2\_red\_15\_nodos/}; la Sección~\ref{sec:caso} cita el archivo de origen de cada una. Ninguna se escribió a mano.
-\item Los supuestos de modelado se identifican como D-xx (registro de decisiones del proyecto, \texttt{agent/DECISIONS.md}).
+\item \textbf{Cifras del caso de la profesora}: todas provienen de la ejecución de \texttt{python -m ada\_g2 run \dots} con la semilla 20261105 y están en \cod{results/caso_entrada_G2_red_15_nodos/}; la Sección~\ref{sec:caso} cita el archivo de origen de cada una. Ninguna se escribió a mano.
+\item El símbolo $\blacksquare$ al final de un párrafo marca el \textbf{fin de una demostración} (equivale a ``q.e.d.'', como en las notas del curso \cite{notas}).
+\item Los supuestos de modelado se identifican como D-xx (registro de decisiones del proyecto, \cod{agent/DECISIONS.md}).
 \item $\Nat=\{0,1,2,\dots\}$; $[n]=\{1,\dots,n\}$; $\ln$ es el logaritmo natural; $\log$ sin base indica base 2 en los costos.
 \end{itemize}
 
