@@ -110,7 +110,7 @@ Sumando: $T(N,B)\le(c_1+c_2+c_4+c_5+c_6+c_7)N+(c_9+c_{11}+c_{12})J+(c_{10}+c_{13
 \[
 T(N,B)\le \alpha N+\beta B(1+\log N)+\gamma\ \Longrightarrow\ T(N,B)\in O(N+B\log N).
 \]
-\textbf{Mejor caso} ($B=0$ o todos los $r_i=0$): $J=0$ y $T_{\text{mejor}}\in\Theta(N)$. \textbf{Peor caso}: $J=B$ (topes holgados) y un montículo de tamaño $\Theta(N)$; el término $B\log N$ es una cota superior de las operaciones de montículo. \textbf{Espacio}: $S(N)\in\Theta(N)$ (arreglos $x$, $a$, $r$ y $H$). La deducción formal completa, con las constantes del código final, es la tarea T10.
+\textbf{Mejor caso} ($B=0$ o todos los $r_i=0$): $J=0$ y $T_{\text{mejor}}\in\Theta(N)$. \textbf{Peor caso}: $T_{\text{peor}}(N,B)\in\Theta(N+B(1+\log N))$, que para $N\ge2$ es $\Theta(N+B\log N)$. La cota superior es la de arriba. La inferior se alcanza con topes holgados ($r_i>B$ para todo $i$): entonces $J=B$, el montículo conserva sus $N$ elementos durante todas las extracciones, y en la implementación de CPython cada extracción baja siempre hasta una hoja, sea cual sea el valor de las claves (Lema~\ref{lem:heapq}). Por eso cada extracción cuesta $\Omega(1+\log N)$ y no solo $O(\log N)$. La deducción completa, con instancia testigo y caso promedio, está en la Proposición~\ref{prop:casos-reparto}. \textbf{Espacio}: el pseudocódigo usa $\Theta(N)$ (arreglos $x$, $a$, $r$ y $H$). El código guarda además la traza de las $J$ unidades, así que usa $\Theta(N+J)\subseteq O(N+B)$.
 
 \paragraph{Pseudo-polinomialidad.} La entrada ocupa $\Theta(N\beta+\log B)$ bits, pero el número de iteraciones $J$ puede ser $B=2^{\log B}$: el algoritmo es polinomial en $N$ y en el \emph{valor} de $B$, pero exponencial en la longitud de $B$. Por ejemplo, duplicar la longitud en bits de $B$ (de $\log B$ a $2\log B$) eleva $B$ al cuadrado y con él el número de iteraciones.
 
@@ -179,11 +179,169 @@ Línea & Instrucción & Ejecuciones & Subtotal\\
 \bottomrule
 \end{tabular}
 \end{center}
-El término dominante es la línea 10, ejecutada exactamente $P\cdot M$ veces: $T(N,k,M)\in\Theta(k\cdot N\cdot M)$. Una evaluación de ganancia marginal (líneas 8–10) cuesta $\tau=\Theta(M)$, de acuerdo con la forma $O(N\cdot k\cdot\tau)$ del enunciado. \textbf{En el JSON} ($M=N$): $T(N,k)\in\Theta(k\,N^2)$. Espacio: $\Theta(NM)$ por la matriz $W$ (entrada) y $\Theta(N+M)$ adicional.
+El término dominante es la línea 10, ejecutada exactamente $P\cdot M$ veces: $T(N,k,M)\in\Theta(k\cdot N\cdot M)$. Esta clase es \emph{invariante} para el \textbf{pseudocódigo}, porque el Algoritmo~\ref{alg:voraz} no tiene parada temprana: siempre hace $k$ pasos. El \textbf{código} (\texttt{select.py::voraz}) sí se detiene antes: cuando ningún candidato factible cabe en el costo o cuando la mayor ganancia es $\le0$. Por eso su mejor caso es $\Theta(NM)$ y solo su peor caso es $\Theta(kNM)$ (Proposición~\ref{prop:casos-voraz}). Una evaluación de ganancia marginal (líneas 8–10) cuesta $\tau=\Theta(M)$, de acuerdo con la forma $O(N\cdot k\cdot\tau)$ del enunciado. \textbf{En el JSON} ($M=N$): $T(N,k)\in\Theta(k\,N^2)$. Espacio: $\Theta(NM)$ por la matriz $W$ (entrada) y $\Theta(N+M)$ adicional.
 
 \paragraph{Nota de fidelidad al código (hallazgo del verifier, C-0008).} El pseudocódigo omite los nodos ya elegidos (línea 7), de modo que sus evaluaciones útiles son $P=kN-k(k-1)/2$. La implementación (\texttt{src/ada\_g2/select.py}) calcula en cada paso las ganancias de \emph{todos} los candidatos con el producto matriz-vector $W(a\odot R)$ y después enmascara a los ya elegidos; por eso hace literalmente $k\cdot N\cdot M$ multiplicaciones y no $P\cdot M$. Como $P>kN/2$, la diferencia es un factor menor que $2$ y la clase $\Theta(kNM)$ se mantiene. La prueba \texttt{test\_conteo\_evaluaciones\_P\_por\_M} (\texttt{tests/test\_seleccion.py}) cuenta las evaluaciones.
 
-\paragraph{Fuerza bruta (referencia exacta).} Enumera los $\sum_{r=0}^{k}\binom{N}{r}$ subconjuntos de tamaño $\le k$ y evalúa cada uno en $O(rM)$: $T_{\text{fb}}\in O\bigl(kM\sum_{r\le k}\binom{N}{r}\bigr)$; para $k\le N/2$, $\binom{N}{r}$ crece con $r$ y $\sum_{r\le k}\binom{N}{r}\le(k+1)\binom{N}{k}$, exponencial en $N$ si $k$ es proporcional a $N$. En el modo \texttt{k} basta con los de tamaño exactamente $k$ (Observación~\ref{obs:exactok}).
+\paragraph{Fuerza bruta (referencia exacta).} Enumera los $\sum_{r=0}^{k}\binom{N}{r}$ subconjuntos de tamaño $\le k$ y evalúa cada uno en $O(rM)$: $T_{\text{fb}}\in O\bigl(kM\sum_{r\le k}\binom{N}{r}\bigr)$; para $k\le N/2$, $\binom{N}{r}$ crece con $r$ y $\sum_{r\le k}\binom{N}{r}\le(k+1)\binom{N}{k}$, exponencial en $N$ si $k$ es proporcional a $N$. En el modo \texttt{k} basta con los de tamaño exactamente $k$ (Observación~\ref{obs:exactok}). \emph{Fidelidad al código:} \texttt{exact.py::fuerza\_bruta} recorre los subconjuntos en profundidad (DFS) y mantiene $R$ de forma incremental, así que cada subconjunto visitado cuesta $\Theta(M)$ y no $O(rM)$. Como el DFS pasa por todos los prefijos, en el modo \texttt{k} visita también los subconjuntos de tamaño $<k$. La cota ajustada que resulta es $\Theta\bigl(N+M\sum_{r\le k}\binom{N}{r}\bigr)$ (Proposición~\ref{prop:casos-fb}).
+
+% ------------------------------------------------------------
+\subsection{Mejor caso, peor caso y caso promedio}\label{sec:casos}
+
+Esta sección da, para cada algoritmo \emph{tal como está implementado} en \texttt{src/ada\_g2/}, $T_{\text{mejor}}$, $T_{\text{peor}}$ y $T_{\text{prom}}$, con una instancia testigo para cada uno. Escribimos $\Theta$ solo cuando tenemos cota superior e inferior; si no, usamos $O$ u $\Omega$ y lo decimos.
+
+\paragraph{Convenciones.} $\log$ es $\log_2$. Escribimos $1+\log N$ para que las cotas valgan también con $N=1$; si $N\ge2$, $\Theta(N+B(1+\log N))=\Theta(N+B\log N)$. Las variables de tamaño son $(N,B)$ en la Parte~1, $(N,M,k)$ y, según el modo, $L$ en la Parte~2, y $T_r$ para el número de rondas (en el JSON $M=N$). Sea $|E|$ el número de aristas del JSON. Mantenemos el modelo de costo unitario de D-13. Además suponemos que el producto denso matriz-vector de NumPy, \texttt{W @ v} con $W\in\Rea^{N\times M}$, cuesta $\Theta(NM)$ operaciones \emph{sin importar los valores} (no aprovecha los ceros). \textbf{Caso promedio}: las notas de clase definen $T_{\text{mejor}}$ y $T_{\text{peor}}$; el caso promedio exige fijar una distribución sobre las entradas, y la declaramos en cada caso. Usamos dos modelos.
+\begin{itemize}[nosep]
+\item \textbf{Modelo A} (Parte~1): los $a_i$ son independientes y tienen una distribución continua en $[\alpha,\beta]$ con $\alpha>0$; $N$, $B$ y los topes $r$ son fijos.
+\item \textbf{Modelo G} (Parte~2 y solución completa): es la distribución de \texttt{generator.py::generar}. Los pesos son $\mathrm{round}(U(0.1,0.9),2)\in[0.1,0.9]$ (nunca $0$ ni $1$; si \texttt{densidad}$<1$, las aristas ausentes valen $0$); los coeficientes son $\mathrm{round}(U(5,15),1)\ge5$; los costos son enteros uniformes en $\{2,\dots,7\}$; los topes son enteros en $\{10,\dots,24\}$; y, por defecto, $L=\mathrm{round}(3.6k)$.
+\end{itemize}
+Las afirmaciones de conteo marcadas ``(verifier)'' están comprobadas en \texttt{tests/test\_casos\_complejidad.py}.
+
+\begin{lema}[costo de una extracción en \texttt{heapq} de CPython; leído en el código fuente]\label{lem:heapq}
+Sea $h\ge1$ el número de elementos sobre los que se llama \texttt{\_siftup(heap,0)}. Para \texttt{heapreplace}, $h=|H|$. Para \texttt{heappop}, $h=|H|-1$, porque primero se retira el último elemento. Entonces el ciclo de descenso de \texttt{\_siftup} itera $d$ veces, con $\lfloor\log h\rfloor-1\le d\le\lfloor\log h\rfloor$, y el ascenso posterior (\texttt{\_siftdown}) itera a lo sumo $d$ veces. En consecuencia, la operación cuesta $\Theta(1+\log h)$ \emph{para cualquier valor de las claves}. Si $h=0$ (un \texttt{heappop} que vacía el montículo), no se llama a \texttt{\_siftup} y el costo es $\Theta(1)$.
+\end{lema}
+\begin{proof}
+(1) \emph{Fuente.} En \texttt{Lib/heapq.py} de Python~3.12 (líneas 137–161 y 260–278 del Python~3.12 instalado localmente), \texttt{heappop} y \texttt{heapreplace} colocan un elemento en la raíz y llaman a \texttt{\_siftup(heap,0)}. Ese procedimiento ``sube el hijo menor \emph{hasta llegar a una hoja}'' con \texttt{while childpos < endpos}, y solo después llama a \texttt{\_siftdown}. La línea 583 importa la versión en C (\texttt{from \_heapq import *}). Su \texttt{siftup} en \texttt{Modules/\_heapqmodule.c} (CPython~3.12, consultado en el repositorio oficial) tiene la misma estructura: \texttt{while (pos < limit)} y después \texttt{siftdown}. Así, el ciclo de descenso termina solo al llegar a una hoja; las claves solo deciden \emph{qué} hijo sube.
+(2) En un árbol binario completo de $h$ nodos guardado en un arreglo, la posición $p$ tiene profundidad $\lfloor\log(p+1)\rfloor$. Las hojas son las posiciones $p\ge\lfloor h/2\rfloor$, con profundidad $\lfloor\log(\lfloor h/2\rfloor+1)\rfloor\ge\lfloor\log h\rfloor-1$, y ninguna posición es más profunda que $\lfloor\log h\rfloor$. Esto da las cotas de $d$.
+(3) El ascenso vuelve por el mismo camino, así que hace a lo sumo $d$ pasos. Cada paso cuesta $\Theta(1)$, porque compara tuplas $(-g,i)$ de tamaño fijo. Sumando, el costo es $\Theta(1+d)=\Theta(1+\log h)$.
+\end{proof}
+\noindent(Verifier) \texttt{heappop} sobre un montículo de $n\ge2$ elementos hizo al menos $\lfloor\log(n-1)\rfloor$ comparaciones en todos los casos probados, con $n$ de $3$ a $300$ y varios tipos de claves. Con $n=2$ hace $0$ (\texttt{test\_heappop\_*}). Esa prueba es empírica y acompaña a la demostración, pero no la reemplaza.
+
+\begin{proposicion}[casos del reparto, \texttt{allocate.py::asignar}; demostrado por nosotros]\label{prop:casos-reparto}
+Sean $J=\min(B,\sum_ir_i)$ y $h_j$ el tamaño sobre el que opera la extracción $j$ ($h_j\le N'\le N$). Entonces
+\[
+T_{\text{asignar}}=\Theta\Bigl(N+\sum_{j=1}^{J}(1+\log h_j)\Bigr).
+\]
+\begin{enumerate}[label=(\alph*),nosep]
+\item $T_{\text{mejor}}(N,B)=\Theta(N)$. Testigo: $B=0$, o $r\equiv0$.
+\item $T_{\text{peor}}(N,B)=\Theta(N+B(1+\log N))$. Testigo: $r_i>B$ para todo $i$.
+\item En el modelo A con $r_i>B$ para todo $i$: $T_{\text{prom}}=\Theta(N+B(1+\log N))=T_{\text{peor}}$. Con topes arbitrarios solo afirmamos $T_{\text{prom}}\in\Omega(N+J)\cap O(N+J(1+\log N))$.
+\end{enumerate}
+\end{proposicion}
+\begin{proof}
+\emph{Costeo del código} (\texttt{allocate.py}, líneas 43–65):
+\begin{itemize}[nosep]
+\item l.~44–45: crean \texttt{x} y la lista del montículo, $\Theta(N)$.
+\item l.~46: \texttt{heapify} hace $\lfloor N'/2\rfloor$ llamadas a \texttt{\_siftup}, que suman $\Theta(N')$ \cite[cap.~6]{clrs}.
+\item l.~51–62: el ciclo se ejecuta exactamente $J$ veces (Teorema~\ref{teo:optimo}; el verifier lo comprobó: \texttt{heappop}$+$\texttt{heapreplace}$=J$ en 405 instancias). Cada iteración hace $\Theta(1)$ de trabajo (ganancia, traza, incrementos) y una extracción de costo $\Theta(1+\log h_j)$ (Lema~\ref{lem:heapq}).
+\item l.~64: suma $N$ utilidades, $\Theta(N)$.
+\end{itemize}
+Sumando se obtiene la fórmula.
+(a) Si $J=0$, la suma es vacía y $T=\Theta(N)$. Además $T\ge cN$ siempre, por las líneas 44 y 64.
+(b) \emph{Cota superior}: $J\le B$ y $h_j\le N$. \emph{Cota inferior}: si $r_i>B$, entonces $\sum_ir_i\ge B$ y $J=B$. Tras cualquier extracción, $x_i\le B<r_i$, así que siempre se ejecuta \texttt{heapreplace} (línea~59), nunca \texttt{heappop}, y $h_j=N$ para todo $j$. Luego $T\ge c\,(N+B(1+\log N))$.
+(c) $J$ no depende de $a$. Si $r_i>B$, el argumento de (b) da $h_j=N$ para \emph{todo} vector $a$. Entonces $T(a)$ está entre dos múltiplos de $N+B(1+\log N)$ que no dependen de $a$, y lo mismo vale para su esperanza. Con topes que se agotan, \texttt{heappop} encoge el montículo (una vez por cada nodo que agota su tope; verifier), y el perfil $(h_j)$ depende de \emph{cuáles} nodos se saturan primero, es decir, de $a$. Solo se sostiene la cota general $1\le 1+\log h_j\le 1+\log N$.
+\end{proof}
+\begin{observacion}[por qué hay que tratar los topes con cuidado]
+Con $r\equiv1$ y $B\ge N$ se tiene $J=N$ y $h_j=N-j$ (cada extracción es un \texttt{heappop}). Entonces $T=\Theta(N+\sum_{j<N}(1+\log(N-j)))=\Theta(N+\log N!)=\Theta(N\log N)$, \emph{aunque $B$ sea enorme}. Como $T$ solo depende de $J$ y no de $B$ directamente, el peor caso en función de $(N,B)$ exige topes holgados.
+\end{observacion}
+\noindent\textbf{En las rondas} el reparto se hace sobre $S$ (\texttt{rounds.py}, l.~128). Con $N\leftarrow|S|$: $\Theta(|S|+J(1+\log|S|))$. Con $|S|\le k$ (modos \texttt{k} y \texttt{ambos}), el peor caso es $\Theta(k+B(1+\log k))$. En el modo \texttt{costo}, $|S|\le N$.
+
+\paragraph{Referencia exacta del reparto (\texttt{exact.py::dp\_reparto}).} Para cada nodo $i$ y cada $b\in\{0,\dots,B\}$, el ciclo interno hace $\min(b,r_i)+1$ iteraciones. Para $r\le B$, $\sum_{b=0}^{B}\min(b,r)=\tfrac{r(r+1)}2+(B-r)r\in[\tfrac{Br}{2},Br]$; para $r>B$ vale $\tfrac{B(B+1)}2$. Sumando y agregando la creación de las tablas, $\Theta(N(B+1))$, se obtiene $T_{\text{dp}}=\Theta\bigl(N(B+1)+B\sum_i\min(B,r_i)\bigr)$. El costo no depende de $a$, así que $T_{\text{prom}}$ coincide con $T$ en cualquier modelo que fije $(N,B,r)$. $T_{\text{mejor}}=\Theta(N(B+1))$ con $r\equiv0$, y $T_{\text{peor}}=\Theta(N(B+1)^2)$ con $r_i\ge B$. Espacio $\Theta(N(B+1))$.
+
+\begin{proposicion}[casos del voraz, \texttt{select.py::voraz} y \texttt{seleccionar}; demostrado por nosotros]\label{prop:casos-voraz}
+Sea $I$ el número de veces que se ejecuta el cuerpo del ciclo de la línea 74. Es igual al número de llamadas a \texttt{ganancias\_todas}. Sea $p=|S|$ al salir. Entonces $p\le I\le\min(k_{\max},p+1)$ y
+\[
+T_{\text{voraz}}=\Theta(N+M+I\cdot NM),\qquad\text{que es }\Theta(I\cdot NM)\text{ si }k_{\max}\ge1.
+\]
+Recordamos que $k_{\max}=k$ en los modos \texttt{k} y \texttt{ambos}, y $k_{\max}=\#\text{candidatos}\le N$ en el modo \texttt{costo}.
+\begin{enumerate}[label=(\alph*),nosep]
+\item $T_{\text{mejor}}=\Theta(NM)$ en los tres modos.
+\item $T_{\text{peor}}=\Theta(kNM)$ en los modos \texttt{k} y \texttt{ambos}. En el modo \texttt{costo}, $T_{\text{peor}}=\Theta(\min(N,L+1)\,NM)$ si todos los $c_i\ge1$, y $\Theta(N^2M)$ si se permiten costos $0$ (el validador acepta $c_i\ge0$).
+\item En el modelo G con todos los nodos candidatos y $k<N$: $T_{\text{prom}}=\Theta(kNM)$ en los modos \texttt{k} y \texttt{ambos} (este último con el $L$ por defecto). En el modo \texttt{costo}, $T_{\text{prom}}=\Theta(\min(N,L+1)NM)$ para $L\ge7$.
+\end{enumerate}
+\texttt{seleccionar} tiene las mismas clases. En el modo \texttt{k} ejecuta un solo voraz. En los modos \texttt{costo} y \texttt{ambos} ejecuta dos voraces y \texttt{mejor\_singleton}; este último cuesta $\Theta(NM)$, porque calcula una vez \texttt{ganancias\_todas}.
+\end{proposicion}
+\begin{proof}
+\emph{Costeo} (\texttt{select.py}, líneas 66–95):
+\begin{itemize}[nosep]
+\item l.~67–69: $\Theta(N+M)$.
+\item Cada iteración del ciclo: l.~75 cuesta $\Theta(NM)$ (supuesto del producto denso); l.~76–85 cuestan $\Theta(N)$ (máscaras y \texttt{argmax}).
+\item Solo si se acepta el elemento: l.~90–91 arman la lista \texttt{evaluados}, $O(N)$, y l.~94 actualiza $R$, $\Theta(M)$.
+\end{itemize}
+La línea 75 va \emph{antes} de las dos salidas (\texttt{break}) de las líneas 77 y 86, así que la iteración que sale también paga $\Theta(NM)$. Total: $\Theta(N+M)+I\,\Theta(NM+N)+p\,O(N+M)$. Como $p\le I$ y $N+M\le2NM$, el total es $\Theta(N+M+I\cdot NM)$.
+
+\emph{Cotas de $I$.} Cada iteración agrega un elemento o sale. Por eso $I=p$ si el ciclo termina por la condición $|S|=k_{\max}$, e $I=p+1$ si termina por \texttt{break}. En ambos casos $I\le k_{\max}$.
+
+(a) Si $k_{\max}\ge1$, entonces $I\ge1$, y por tanto $T=\Omega(NM)$. \emph{Testigo 1} (modos \texttt{costo} y \texttt{ambos}): $c_i>L$ para todo $i$. En la primera iteración la máscara \texttt{fact} queda vacía; resultan $I=1$ y $S=\emptyset$. \emph{Testigo 2} (modo \texttt{k}, $k\ge2$): un nodo ``estrella'' $e$ con $w_{ej}=1$ para todo $j$. Como $a_j>0$ y $w\le1$, la ganancia de cualquier $i$ es $\sum_ja_jw_{ij}\le\sum_ja_j$, con igualdad si y solo si la fila $i$ es toda de unos. El elegido tiene, entonces, una fila de unos, y la línea 94 deja $R\equiv0$. En la segunda iteración todas las ganancias valen $0$ y se sale por la línea 86: $I=2$, $|S|=1$. En ambos testigos, $T=\Theta(NM)$ (verifier: \texttt{test\_voraz\_mejor\_caso\_*}). En \texttt{seleccionar}, el testigo 1 da exactamente $3$ llamadas: $1+1$ de los voraces y $1$ del singleton.
+
+(b) \emph{Modos \texttt{k} y \texttt{ambos}}: $I\le k$ da $O(kNM)$. \emph{Testigo}: $w_{ij}<1$ para todo $i\ne j$, $k<N$ y, en el modo \texttt{ambos}, $L\ge\sum_ic_i$. Si $i\notin S$, entonces $\Delta(i\mid S)\ge a_iw_{ii}R_i=a_i\prod_{l\in S}(1-w_{li})>0$, y siempre quedan candidatos factibles. Por lo tanto nunca se sale por \texttt{break}, y $p=I=k$. \emph{Modo \texttt{costo}}: $I\le k_{\max}\le N$. Si $c_i\ge1$, como cada elemento aceptado consume al menos una unidad de $L$, se tiene $p\le L$ e $I\le\min(N,L+1)$. \emph{Testigo}: $c\equiv1$ y $w_{ij}<1$ fuera de la diagonal. Si $L\ge N$, se eligen todos ($I=N$). Si $L<N$, se eligen $L$ y la iteración $L+1$ sale por \texttt{fact} vacía ($I=L+1$). Con $c\equiv0$, $I=N$.
+
+(c) En el modelo G, $1-w_{li}\ge0.1$ y $a_i\ge5$, así que para $i\notin S$ se cumple $\Delta(i\mid S)\ge5\cdot0.1^{|S|}>0$. \emph{Modo \texttt{k}}: el argumento de (b) da $I=k$ para \emph{toda} instancia de G. El costo es invariante sobre G y su promedio es $\Theta(kNM)$ (verifier: exactamente $k_{\max}$ pasos en 60 instancias). \emph{Modo \texttt{ambos}}: si el costo restante es al menos $7\ge\max_ic_i$, todo candidato cabe. Luego $p\ge\min(k,\lfloor L/7\rfloor)$ e $I\ge\max(1,\lfloor L/7\rfloor)$. Con $L=\mathrm{round}(3.6k)$ esto es $\Theta(k)$, y como $I\le k$, se obtiene $\Theta(kNM)$. El mismo argumento vale para el criterio de razón, porque también sale solo cuando no cabe nadie o cuando la ganancia es $\le0$. \emph{Modo \texttt{costo}}: $\lfloor L/7\rfloor\le p\le\lfloor L/2\rfloor$, siempre acotado por $N$.
+\end{proof}
+\begin{observacion}[aritmética de punto flotante]
+En (c), la positividad se usa en doble precisión IEEE-754. $5\cdot0.1^{|S|}$ es representable mientras $|S|$ no sea del orden de $320$; con $k$ mayor, $R_i$ podría desbordarse por abajo (\emph{underflow}) hasta $0$ y el voraz pararía antes. \VER{} (umbral exacto; irrelevante para los tamaños del proyecto).
+\end{observacion}
+
+\begin{proposicion}[casos de la fuerza bruta, \texttt{exact.py::fuerza\_bruta}; demostrado por nosotros]\label{prop:casos-fb}
+Sean $n\le N$ el número de candidatos, $c\ge0$ los costos, $V$ el número de visitas (el contador \texttt{cuenta}), $X$ el número de iteraciones del ciclo de la línea 54, y $V_{\max}=\sum_{r=0}^{\min(k_{\max},n)}\binom nr$.
+\begin{enumerate}[label=(\roman*),nosep]
+\item Un subconjunto $S$ se visita si y solo si $|S|\le k_{\max}$ y $c(S)\le L$.
+\item $V-1\le X\le V_{\max}-1$ y $T_{\text{fb}}=\Theta(N+M\cdot V+X)$.
+\item $T_{\text{mejor}}=\Theta(N+M)$ en los modos \texttt{costo} y \texttt{ambos}. Testigo: $c_i>L$ para todo $i$ (verifier: $V=1$).
+\item $T_{\text{peor}}=\Theta(N+M\cdot V_{\max})$. Testigo: $L\ge\sum_ic_i$ (verifier: $V=V_{\max}$, también con $k_{\max}\ge n$). Esto es $\Theta(N+M\sum_{r\le k}\binom Nr)$ en los modos \texttt{k} y \texttt{ambos}, y $\Theta(M\,2^N)$ en el modo \texttt{costo}.
+\item En el modo \texttt{k} el costo es \emph{invariante}: $T_{\text{mejor}}=T_{\text{peor}}=T_{\text{prom}}=\Theta(N+M\sum_{r\le k}\binom Nr)$.
+\item Caso promedio: $\mathbb E[V]=\sum_{|S|\le k_{\max}}\Pr[c(S)\le L]$ y $T_{\text{prom}}=\Theta(N+M\,\mathbb E[V]+\mathbb E[X])$.
+\end{enumerate}
+\end{proposicion}
+\begin{proof}
+(i) El DFS con \texttt{inicio}$=$\texttt{pos}$+1$ genera cada $S=\{i_1<\dots<i_r\}$ a lo sumo una vez, por la cadena de sus prefijos. La rama se corta al agregar $i_m$ si y solo si $c(\{i_1,\dots,i_m\})>L$ (línea 56), o deja de extenderse cuando el tamaño llega a $k_{\max}$ (línea 51). Como $c\ge0$, los costos de los prefijos no decrecen, así que todos los prefijos caben si y solo si $c(S)\le L$.
+(ii) Cada visita distinta de la raíz proviene de una iteración del ciclo, así que $V-1\le X$. Cada iteración del ciclo, podada o no, corresponde a un subconjunto distinto $S\cup\{i\}$ con $|S\cup\{i\}|\le k_{\max}$, así que $X\le V_{\max}-1$. Costo por visita: $\Theta(1)$, más \texttt{aR} de costo $\Theta(M)$ si $|S|<k_{\max}$, más la creación de la visita (\texttt{W[i]@aR} y \texttt{R*(1-W[i])}, $\Theta(M)$; para la raíz, \texttt{np.ones}, $\Theta(M)$). Cada iteración podada cuesta $\Theta(1)$. El preámbulo cuesta $\Theta(N)$ (\texttt{carr}) más \texttt{sorted}, que es $\Theta(n)$ porque las listas que recibe ya vienen ordenadas (\texttt{rounds.py}, l.~117). \texttt{num\_subconjuntos} hace $O(k_{\max})$ llamadas a \texttt{comb}, con costo unitario asumido (se usa con $N\le20$).
+(iii) $V=1$ y $X=n$: el costo es $\Theta(N+M+n)=\Theta(N+M)$.
+(iv) Sin poda, $V=V_{\max}$ y $X=V_{\max}-1$. La cota superior sale de (ii), porque $V\le V_{\max}$. En el modo \texttt{costo}, $k_{\max}=n$ y $V_{\max}=2^n$.
+(v) El modo \texttt{k} no poda por costo ($L=\infty$), así que vale (iv) para toda instancia.
+(vi) Por (i), $V=\sum_{|S|\le k_{\max}}\mathbf 1[c(S)\le L]$; se toma esperanza.
+\end{proof}
+\noindent\textbf{Caso promedio en el modelo G} (modo \texttt{ambos}). Como $c_i\in\{2,\dots,7\}$, todo subconjunto con $|S|\le\lfloor L/7\rfloor$ cabe y ninguno con $|S|>\lfloor L/2\rfloor$ cabe. Por lo tanto, para \emph{toda} instancia de G,
+\[
+\sum_{r=0}^{\min(k,\lfloor L/7\rfloor)}\binom Nr\ \le\ V\ \le\ \sum_{r=0}^{\min(k,\lfloor L/2\rfloor)}\binom Nr ,
+\]
+y lo mismo vale para $\mathbb E[V]$. No damos una fórmula cerrada de $\mathbb E[V]$, porque depende de la distribución de la suma de costos discretos uniformes. Se medirá en T13. Con $L=\Theta(k)$ y $k$ proporcional a $N$, ambas cotas son exponenciales en $N$. Nota de implementación: si $V$ supera \texttt{max\_visitas}$=3\cdot10^6$, la rutina aborta (\texttt{ExactoDemasiadoGrande}); el análisis anterior ignora ese tope.
+
+\paragraph{Certificados (\texttt{certificates.py}).}
+\emph{Reparto} (\texttt{certificar\_reparto}, sobre $n=|S|$ nodos): elegir $\lambda$ cuesta $\Theta(1)$, porque es la ganancia de la última unidad de la traza, o $0$. Si $B=0$, se calcula un máximo sobre $n$ nodos, $\Theta(n)$. La cota $\mathrm{UB}(\lambda)$ suma $n$ veces \texttt{\_max\_entero}, que prueba a lo sumo $4$ candidatos enteros de costo $\Theta(1)$. Total $\Theta(n)$ en todos los casos: es invariante y \emph{no depende de $B$}.
+\emph{Selección} (\texttt{certificar\_seleccion}): reconstruir $R$ cuesta $\Theta(M+|S|M)$; \texttt{ganancias\_todas}, $\Theta(NM)$; armar \texttt{idx} y los datos del PL, $\Theta(N)$. A eso se suma $C_{\text{PL}}$, el costo de \texttt{linprog(method="highs")} sobre $n'\le N$ variables acotadas en $[0,1]$ y a lo sumo $2$ restricciones. Según la documentación de SciPy, \texttt{"highs"} ``elige automáticamente entre \texttt{highs-ds} y \texttt{highs-ipm}'' (símplex dual o punto interior). \textbf{No acotamos $C_{\text{PL}}$}. La programación lineal es resoluble en tiempo polinomial en general (Khachiyan, 1979) \VER{} (no está en la bibliografía del enunciado), pero el símplex no tiene una cota polinomial de peor caso conocida en general \VER{}. El certificado es una \emph{verificación} que se suma al algoritmo y no forma parte de él. Observación: si solo hay restricción de cardinalidad, el PL se resuelve sumando las $k$ mayores $\Delta(e\mid S)$, en $O(N\log N)$; no lo implementamos así.
+
+\paragraph{Solución completa (\texttt{rounds.py::ejecutar}, $T_r$ rondas, $M=N$).} Sean $I_t$ las llamadas a \texttt{ganancias\_todas} en la ronda $t$, $S_t$ la selección y $J_t=\min(B,\sum_{i\in S_t}\text{tope}_i)$.
+\begin{itemize}[nosep]
+\item Leer el JSON cuesta $\Theta(N^2+|E|)$: \texttt{np.eye} crea $W$ en $\Theta(N^2)$ y cada arista se procesa en $\Theta(1)$. Si no hay aristas repetidas, $|E|\le N(N-1)/2$ y el total es $\Theta(N^2)$.
+\item Por ronda: \texttt{disp}, \texttt{mask}, \texttt{topes} y \texttt{rem\_antes} cuestan $\Theta(N)$; la selección, $\Theta(I_t N^2)$ (Proposición~\ref{prop:casos-voraz}); el reparto, $\Theta(|S_t|+J_t(1+\log|S_t|))$; \texttt{sorted}, $O(|S_t|\log|S_t|)$; \texttt{verificar\_ronda}, $O(|S_t|N)$, porque \texttt{i not in disp} recorre una lista; \texttt{f\_directa}, $\Theta(M+|S_t|M)$.
+\end{itemize}
+Como $|S_t|\le I_t$ (cada elemento de $S_t$ lo agregó una iteración de algún voraz), todos los términos con $|S_t|$ quedan dominados por $I_tN^2$. Así
+\[
+T_{\text{sol}}=\Theta\Bigl(N^2+|E|+\sum_{t=1}^{T_r}\bigl(I_tN^2+J_t(1+\log|S_t|)\bigr)\Bigr)\quad(\text{sin certificados}),
+\]
+y con certificados (la opción por defecto) se suma $\sum_t\bigl(\Theta(N^2)+C_{\text{PL},t}\bigr)$. Tomando $1\le I_t\le k$ y $J_t\le B$ (modos \texttt{k} y \texttt{ambos}):
+\begin{itemize}[nosep]
+\item $T_{\text{mejor}}=\Theta(N^2+|E|+T_rN^2)$. $I_t\ge1$ siempre: en el modo \texttt{k}, porque $k\ge1$; en los otros dos, porque el singleton siempre calcula \texttt{ganancias\_todas}. Testigo: $B=0$ y $c_i>L$ para todo $i$ (modo \texttt{ambos}), con $I_t=3$ y $S_t=\emptyset$; o $B=0$ con un nodo estrella (modo \texttt{k}), con $I_t=2$.
+\item $T_{\text{peor}}=\Theta\bigl(N^2+|E|+T_r(kN^2+B(1+\log k))\bigr)$. Testigo: modo \texttt{k} (o \texttt{ambos} con $L\ge\sum c$), $w_{ij}<1$ fuera de la diagonal, $k<N$, política \texttt{concentrado} y $R_i>T_rB$ para todo $i$. Entonces en la ronda $t$ el restante de cada nodo es al menos $R_i-(t-1)B>B$: todos los nodos están disponibles, $I_t=k$, $J_t=B$ y el montículo tiene $k$ elementos en cada extracción. En el modo \texttt{costo}, $k$ se reemplaza por $\min(N,L+1)$, o por $N$ si hay costos $0$.
+\item $T_{\text{prom}}$ en el modelo G (modo \texttt{k}, $q=0$, $N\ge T_rk$): en cada ronda se agotan a lo sumo $k$ nodos, así que hay al menos $N-(t-1)k\ge k$ candidatos e $I_t=k$. Resulta $T_{\text{prom}}=\Theta\bigl(N^2+T_rkN^2+\log k\cdot\mathbb E[\sum_tJ_t]\bigr)$, con $0\le\sum_tJ_t\le T_rB$. Por lo tanto, $T_{\text{prom}}\in\Omega(T_rkN^2)\cap O(T_r(kN^2+B\log k))$. Con la hipótesis adicional $R_i>T_rB$, se vuelve $\Theta(T_r(kN^2+B\log k))$.
+\end{itemize}
+El subcomando \texttt{run} llama además a \texttt{comparar\_exacto}, que es exponencial (Proposición~\ref{prop:casos-fb}) pero solo se ejecuta si $N\le20$. Por eso es una referencia acotada para pruebas y no entra en el análisis asintótico.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\raggedright}p{2.4cm}>{\raggedright}p{1.9cm}>{\raggedright}p{2.6cm}>{\raggedright}p{2.6cm}>{\raggedright}p{2.0cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
+\toprule
+Algoritmo & $T_{\text{mejor}}$ & $T_{\text{peor}}$ & $T_{\text{prom}}$ & $S(n)$ & Instancia testigo\\
+\midrule
+Reparto \texttt{asignar} $(N,B)$ & $\Theta(N)$ & $\Theta(N+B(1+\log N))$ & $\Theta(N+B(1+\log N))$ (modelo A, $r_i>B$) & $\Theta(N+J)$ & mejor: $B=0$; peor y promedio: $r_i>B$ para todo $i$\\
+Reparto en una ronda (sobre $S$) & $\Theta(1+|S|)$ & $\Theta(k+B(1+\log k))$ & igual al peor si $R_i>T_rB$ & $\Theta(k+B)$ & como arriba, con $N\leftarrow|S|\le k$\\
+DP del reparto (referencia) & $\Theta(N(B+1))$ & $\Theta(N(B+1)^2)$ & invariante en $a$ & $\Theta(N(B+1))$ & mejor: $r\equiv0$; peor: $r_i\ge B$\\
+Voraz / \texttt{seleccionar}, modos \texttt{k} y \texttt{ambos} & $\Theta(NM)$ & $\Theta(kNM)$ & $\Theta(kNM)$ (modelo G) & $\Theta(NM)$ entrada $+\ \Theta(N+M+kN)$ & mejor: nodo estrella (\texttt{k}) o $c_i>L$ (\texttt{ambos}); peor: $w_{ij}<1$ fuera de la diagonal y $L\ge\sum c$\\
+Voraz / \texttt{seleccionar}, modo \texttt{costo} & $\Theta(NM)$ & $\Theta(\min(N,L+1)NM)$ si $c\ge1$; $\Theta(N^2M)$ si hay $c_i=0$ & $\Theta(\min(N,L+1)NM)$ (modelo G, $L\ge7$) & $\Theta(NM)+\Theta(N^2)$ traza & mejor: $c_i>L$; peor: $c\equiv1$ ($c\equiv0$) y $w_{ij}<1$\\
+Fuerza bruta (\texttt{k}) & \multicolumn{3}{>{\raggedright}p{7.6cm}}{invariante: $\Theta\bigl(N+M\sum_{r\le k}\binom Nr\bigr)$} & $\Theta(N+kM)$ & cualquiera\\
+Fuerza bruta (\texttt{costo}/\texttt{ambos}) & $\Theta(N+M)$ & $\Theta(N+M\,V_{\max})$ & $\Theta(N+M\,\mathbb E[V]+\mathbb E[X])$, entre las cotas de G; se mide en T13 & $\Theta(N+k_{\max}M)$ & mejor: $c_i>L$; peor: $L\ge\sum c$\\
+Certificado del reparto & \multicolumn{3}{>{\raggedright}p{7.6cm}}{invariante: $\Theta(|S|)$, independiente de $B$} & $\Theta(|S|)$ & cualquiera\\
+Certificado de la selección & \multicolumn{3}{>{\raggedright}p{7.6cm}}{$\Theta(NM+|S|M)+C_{\text{PL}}$; $C_{\text{PL}}$ no acotado por nosotros \VER} & $\Theta(N+M)+$PL & ---\\
+Solución completa ($M=N$, \texttt{k}/\texttt{ambos}, sin cert.) & $\Theta(N^2+|E|+T_rN^2)$ & $\Theta(N^2+|E|+T_r(kN^2+B(1+\log k)))$ & $\Omega(T_rkN^2)\cap O(T_r(kN^2+B\log k))$ (modelo G, $N\ge T_rk$) & $\Theta(N^2+T_r(kN+B))$ & mejor: $B=0$ y $c_i>L$; peor: $w_{ij}<1$, $R_i>T_rB$\\
+\bottomrule
+\end{tabular}
+\caption{Resumen de complejidad temporal y espacial, con instancia testigo, de la implementación en \texttt{src/ada\_g2/}. Convención: $1+\log$ cubre $N=1$ y $k=1$.}\label{tab:casos}
+\end{table}
+
+\noindent\textbf{Espacio.} La columna $S(n)$ cuenta la memoria auxiliar más la entrada cuando esta domina. Detalles: el voraz guarda en cada paso la lista \texttt{evaluados} ($O(N)$), de ahí el $\Theta(kN)$; la fuerza bruta tiene profundidad de recursión $\le k_{\max}+1$ y cada marco guarda $R$ y \texttt{aR}, de $\Theta(M)$ cada uno; la solución completa conserva, por ronda, \texttt{disp}, \texttt{rem\_antes}, \texttt{topes} ($\Theta(N)$), las trazas de selección ($O(kN)$) y la del reparto ($O(B)$).
 
 % ------------------------------------------------------------
 \subsection{Cota $1-1/e$ del voraz (modo \texttt{k})}\label{sec:cota}

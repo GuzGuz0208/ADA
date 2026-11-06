@@ -200,9 +200,9 @@ Al final se verifica la restricción global $\sum_t x_{i,t}\le R_i$. La corrida 
 
 \paragraph{Modos} (\cod{limites}): \cod{k} impone $|S|\le k$; \cod{costo} impone $\sum c\le L$; \cod{ambos} impone las dos. En todos, $|S|\le k$ significa ``a lo sumo'' (D-27).
 
-\paragraph{Heurísticas.} En modo \cod{k} solo se usa \cod{voraz_ganancia}, con garantía $1-(1-1/k)^k\ge 1-1/e$ (Nemhauser, Wolsey y Fisher, 1978; la prueba está en el informe, Sección~3.3). En los modos \cod{costo} y \cod{ambos} se toma el mejor entre \cod{voraz_ganancia}, \cod{voraz_razon} (ganancia/costo) y \cod{singleton} (mejor nodo individual factible); en empate gana la primera en ese orden (D-23). El voraz factible salta a los candidatos que no caben en lugar de detenerse (D-29). \textbf{No se afirma garantía en \cod{costo} ni en \cod{ambos}} (R-01).
+\paragraph{Heurísticas.} En modo \cod{k} solo se usa \cod{voraz_ganancia}, con garantía $1-(1-1/k)^k\ge 1-1/e$ (Nemhauser, Wolsey y Fisher, 1978; la prueba está en el informe, Sección~3.4). En los modos \cod{costo} y \cod{ambos} se toma el mejor entre \cod{voraz_ganancia}, \cod{voraz_razon} (ganancia/costo) y \cod{singleton} (mejor nodo individual factible); en empate gana la primera en ese orden (D-23). El voraz factible salta a los candidatos que no caben en lugar de detenerse (D-29). \textbf{No se afirma garantía en \cod{costo} ni en \cod{ambos}} (R-01).
 
-\paragraph{Costo.} $\Theta(k\,N\,M)$, que es $\Theta(kN^2)$ con $M=N$ en el JSON de la profesora. Las evaluaciones útiles son $P=kN-k(k-1)/2$, pero el código calcula las $N$ ganancias en cada paso y hace literalmente $kNM$ multiplicaciones; la clase de complejidad no cambia (informe, Sección~3.2, nota de fidelidad).
+\paragraph{Costo.} Peor caso $\Theta(k\,N\,M)$ en los modos \cod{k} y \cod{ambos}, que es $\Theta(kN^2)$ con $M=N$ en el JSON de la profesora. Por la parada temprana, el mejor caso es $\Theta(NM)$ (Sección~\ref{sec:casos-manual}). Las evaluaciones útiles son $P=kN-k(k-1)/2$, pero el código calcula las $N$ ganancias en cada paso y hace literalmente $kNM$ multiplicaciones; la clase de complejidad no cambia (informe, Sección~3.2, nota de fidelidad).
 
 \begin{algorithm}[ht]
 \caption{Voraz por ganancia marginal (Parte 2, modo \texttt{k})}\label{alg:voraz}
@@ -232,7 +232,7 @@ La ganancia marginal de dar la unidad $(x+1)$ al nodo $i$ es $g_i(x)=a_i\ln\frac
 
 \paragraph{Invariante.} Tras $j$ pasos, las $j$ unidades tomadas son las $j$ mayores ganancias marginales del multiconjunto; por eso el resultado es óptimo (Teorema~3.1 del informe, por intercambio y concavidad).
 
-\paragraph{Costo.} $T(N,B)=O(N+B\log N)$. La utilidad final se recalcula directamente, $\sum a_i\ln(1+x_i)$, y no se acumula.
+\paragraph{Costo.} Mejor caso $\Theta(N)$ ($B=0$) y peor caso $\Theta(N+B(1+\log N))$ (topes $r_i>B$). El peor caso es $\Theta$ y no solo $O$ porque \cod{heappop} y \cod{heapreplace} de CPython siempre bajan hasta una hoja (informe, Sección~3.3). La utilidad final se recalcula directamente, $\sum a_i\ln(1+x_i)$, y no se acumula.
 
 \begin{algorithm}[ht]
 \caption{Reparto voraz con montículo (Parte 1)}\label{alg:reparto}
@@ -259,6 +259,39 @@ La ganancia marginal de dar la unidad $(x+1)$ al nodo $i$ es $g_i(x)=a_i\ln\frac
 \paragraph{Selección (programa lineal).} Para cualquier $S$ factible y $f$ monótona y submodular, $f(S^\ast)\le f(S)+\max\{\sum_e\Delta(e\mid S)z_e:\ \sum z_e\le k,\ \sum c_e z_e\le L,\ 0\le z\le 1\}$. Se resuelve con \cod{scipy.optimize.linprog} (HiGHS). La razón certificada es $f(S)/\text{cota}$. Vale con cupo y costo a la vez.
 
 \paragraph{Exactos de referencia (\texttt{exact.py}, solo validación).} \cod{fuerza_bruta}: DFS sobre subconjuntos factibles (hasta 3\,000\,000 de visitas). \cod{dp_reparto}: programación dinámica sobre nodos y presupuesto.
+
+\subsection{Casos de complejidad: mejor, peor y promedio}\label{sec:casos-manual}
+
+Resumen de la Sección~3.3 del informe, donde están las demostraciones. Las afirmaciones de conteo se comprueban en \cod{tests/test_casos_complejidad.py}. Notación: $\log=\log_2$; $I$ es el número de llamadas a \cod{ganancias_todas}; $V_{\max}=\sum_{r\le k_{\max}}\binom Nr$; $|E|$ es el número de aristas del JSON. \textbf{Modelo A}: los $a_i$ son aleatorios continuos, con $r$ y $B$ fijos. \textbf{Modelo G}: la distribución de \cod{generator.py} (pesos en $[0.1,0.9]$, $a\ge5$, $c\in\{2,\dots,7\}$).
+
+{\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright}p{2.3cm}>{\raggedright}p{1.8cm}>{\raggedright}p{2.7cm}>{\raggedright}p{2.6cm}>{\raggedright}p{2.0cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\toprule
+Algoritmo & $T_{\text{mejor}}$ & $T_{\text{peor}}$ & $T_{\text{prom}}$ & $S(n)$ & Testigo (mejor / peor)\\
+\midrule
+\endhead
+Reparto \cod{asignar} & $\Theta(N)$ & $\Theta(N+B(1+\log N))$ & $=T_{\text{peor}}$ (A, $r_i>B$) & $\Theta(N+J)$ & $B=0$ / $r_i>B$\\
+Reparto en ronda (sobre $S$) & $\Theta(1+|S|)$ & $\Theta(k+B(1+\log k))$ & $=T_{\text{peor}}$ si $R_i>T_rB$ & $\Theta(k+B)$ & ídem, con $N\leftarrow|S|\le k$\\
+DP del reparto & $\Theta(N(B+1))$ & $\Theta(N(B+1)^2)$ & invariante en $a$ & $\Theta(N(B+1))$ & $r\equiv0$ / $r_i\ge B$\\
+Voraz, \cod{k}/\cod{ambos} & $\Theta(NM)$ & $\Theta(kNM)$ & $\Theta(kNM)$ (G) & $\Theta(NM)+\Theta(N+M+kN)$ & estrella o $c_i>L$ / $w_{ij}<1$, $L\ge\sum c$\\
+Voraz, \cod{costo} & $\Theta(NM)$ & $\Theta(\min(N,L+1)NM)$; $\Theta(N^2M)$ si hay $c_i=0$ & $\Theta(\min(N,L+1)NM)$ (G, $L\ge7$) & $\Theta(NM)+\Theta(N^2)$ & $c_i>L$ / $c\equiv1$, $w_{ij}<1$\\
+Fuerza bruta, \cod{k} & invariante & $\Theta(N+M\sum_{r\le k}\binom Nr)$ & invariante & $\Theta(N+kM)$ & cualquiera\\
+Fuerza bruta, \cod{costo}/\cod{ambos} & $\Theta(N+M)$ & $\Theta(N+M\,V_{\max})$ & entre las cotas de G; se mide en T13 & $\Theta(N+k_{\max}M)$ & $c_i>L$ / $L\ge\sum c$\\
+Certificado del reparto & $\Theta(|S|)$ & $\Theta(|S|)$ & $\Theta(|S|)$ & $\Theta(|S|)$ & cualquiera\\
+Certificado de la selección & $\Theta(NM)+C_{\text{PL}}$ & $\Theta(NM)+C_{\text{PL}}$ & --- & $\Theta(N+M)+$PL & $C_{\text{PL}}$ no acotado \textbf{[VERIFICAR]}\\
+Solución completa (\cod{k}/\cod{ambos}, $M=N$, sin certificados) & $\Theta(N^2+|E|+T_rN^2)$ & $\Theta(N^2+|E|+T_r(kN^2+B(1+\log k)))$ & $\Omega(T_rkN^2)\cap O(T_r(kN^2+B\log k))$ (G, $N\ge T_rk$) & $\Theta(N^2+T_r(kN+B))$ & $B=0$, $c_i>L$ / $w_{ij}<1$, $R_i>T_rB$\\
+\bottomrule
+\end{longtable}
+}
+
+\begin{itemize}[nosep]
+\item \textbf{Reparto}: cuesta $\Theta(N+\sum_j(1+\log h_j))$, donde $h_j$ es el tamaño del montículo. Con topes que se agotan, \cod{heappop} lo encoge: por ejemplo, con $r\equiv1$ y $B\ge N$ el costo es $\Theta(N\log N)$ aunque $B$ sea enorme.
+\item \textbf{Voraz}: $T=\Theta(I\cdot NM)$ con $p\le I\le\min(k_{\max},p+1)$. La iteración que termina con \cod{break} también paga el producto $W(a\odot R)$.
+\item \textbf{Fuerza bruta}: $S$ se visita si y solo si $|S|\le k_{\max}$ y $c(S)\le L$. Por eso $\mathbb E[V]=\sum_S\Pr[c(S)\le L]$; no se da fórmula cerrada.
+\item \textbf{Certificados}: el del reparto no depende de $B$. El de la selección resuelve un programa lineal con \cod{linprog(method="highs")}, que elige entre símplex dual y punto interior; es una verificación y no forma parte del algoritmo.
+\item \textbf{Solución completa}: leer $W$ cuesta $\Theta(N^2)$. En cada ronda hay al menos una llamada a \cod{ganancias_todas}, así que $T_{\text{mejor}}$ es $\Theta(T_rN^2)$. \cod{comparar_exacto} (subcomando \cod{run}) solo se ejecuta si $N\le20$.
+\end{itemize}
 
 % =====================================================================
 \section{Uso paso a paso}\label{sec:uso}

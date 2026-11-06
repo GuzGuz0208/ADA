@@ -256,3 +256,37 @@
   - Sin verificar: visibilidad pública del repo (declarada por el usuario; no comprobada por el scribe); revisión visual de los PDF más allá de pdfplumber.
 - **Commit:** el commit que contiene esta entrada (`git log -1`); tag `v0.1-primera-entrega` sobre él. C-0011 = `72cca80`; C-0010 = `730c8fa`; C-0009 = `4376f41`.
 - **Siguiente paso:** sesión nueva; leer `agent/CONTEXT.md` y empezar P1 con T13 (experimentos E1–E3 en `results/experimentos/`, según `agent/SPEC.md`).
+
+### C-0013 · 2026-11-06 09:07 · claude-haiku-5.5 (scribe), por orden del orquestador (Claude Code) · tarea T10 (mejor caso, peor caso y caso promedio); nueva T10b
+- **Tipo:** test + docs (la parte de informe y manual aún no está escrita)
+- **Archivos:**
+  - A `tests/test_casos_complejidad.py` — 33 pruebas que cuentan operaciones: reparto (iteraciones = J = min(B, Σr_i) en 405 instancias); `heappop` con al menos floor(log2 n) comparaciones para n≥3 y 0 para n=2; voraz en modo k con nodo "estrella" (2 llamadas a `ganancias_todas`, |S|=1) y con todo c_i>L (1 llamada, S=∅); caso promedio del generador (exactamente kmax pasos); fuerza bruta (visitas=1 si nada cabe; sin poda, visitas = nº de subconjuntos)
+  - M `agent/CONTEXT.md` (reescrito), `agent/TASKS.md` (nota en T10; T10b nueva), `agent/DECISIONS.md` (D-36: caso promedio bajo el modelo del generador), `agent/CHANGELOG.md` (solo esta entrada añadida), `agent/log/auto_changes.log` (traza automática)
+- **Qué y por qué:** pedido del usuario: verificar que el informe dé la notación del mejor caso, el peor caso y el caso promedio. La revisión encontró: (1) reparto con mejor caso Θ(N) y peor caso solo O(N+B log N), sin cota ajustada; (2) el voraz de selección se presentaba como Θ(kNM), pero `select.py` se detiene antes de k pasos cuando no hay candidatos que quepan, así que su mejor caso es Θ(NM); (3) fuerza bruta solo con cota O; (4) rondas, certificados y solución completa sin analizar; (5) caso promedio ausente. Las pruebas de este bloque respaldan los conteos de (1), (2) y (3). Plan aprobado: theorist añade la subsección "Mejor caso, peor caso y caso promedio" con tabla resumen en `informe/secciones/03_optimalidad_y_cota.tex` y la replica en `informe/INFORME.md` y `manual/MANUAL_TECNICO.md`.
+- **Verificación:**
+  - orquestador: `.venv/Scripts/python.exe -m pytest -q` → 273 passed, 0 failed (240 previas + 33 nuevas). Con el `py` del sistema la recolección falla (ModuleNotFoundError: ada_g2); usar el venv.
+  - scribe: no re-ejecutó pytest (el resultado es el reportado por el orquestador). Confirmado por `git status --short`: `?? tests/test_casos_complejidad.py` y `M agent/log/auto_changes.log`; el archivo define 11 funciones `test_` (33 casos al parametrizar).
+  - scribe: `git status --short` en el momento del registro no muestra cambios en `informe/` ni en `manual/`.
+  - Sin verificar: la subsección de informe y manual (aún no escrita); la deducción formal de T(n) (T10); el caso promedio frente a experimentos reales (T13).
+- **Commit:** pendiente (no se hace commit en esta entrada; el commit se hará al final, con los cambios del theorist en `informe/` y `manual/`, que deben registrarse en una entrada posterior)
+- **Siguiente paso:** theorist escribe la subsección "Mejor caso, peor caso y caso promedio" en `informe/secciones/03_optimalidad_y_cota.tex`, replica en `informe/INFORME.md` y `manual/MANUAL_TECNICO.md`, y el scribe registra con C-0014.
+
+### C-0014 · 2026-11-06 09:17 · claude-haiku-5.5 (scribe), por orden del orquestador (Claude Code); análisis del theorist (claude-opus-5.5) · tarea T10b (mejor caso, peor caso y caso promedio; cierre teórico)
+- **Tipo:** docs + test + chore (solo docstrings en `src/`)
+- **Archivos:**
+  - M `informe/secciones/03_optimalidad_y_cota.tex` — subsección "Mejor caso, peor caso y caso promedio" (`\label{sec:casos}`): lema lem:heapq, prop:casos-reparto, prop:casos-voraz, prop:casos-fb, DP, certificados, solución completa y tabla tab:casos; reparto peor caso Θ(N+B(1+log N)); espacio Θ(N+J); Θ(kNM) invariante solo en el pseudocódigo (mejor caso del código Θ(NM)); nota de fidelidad de la fuerza bruta
+  - M `informe/INFORME.md` — nueva §3.3 (espejo); la cota 1−1/e pasa a §3.4
+  - M `manual/MANUAL_TECNICO.md` — nueva §3.5 (espejo)
+  - M `manual/manual_tecnico.tex` — `sec:casos-manual` como longtable
+  - A `tests/test_casos_complejidad.py` — 33 pruebas que cuentan operaciones (su registro es C-0013; se commitea aquí)
+  - M `src/ada_g2/select.py` — solo docstring de `seleccionar` (T = O(kmax·N·M); en modo `costo` kmax = |cand|)
+  - M `src/ada_g2/rounds.py` — solo docstring de `ejecutar` (kmax en modo `costo`)
+  - M `agent/CHANGELOG.md` (C-0013 y C-0014 añadidas), `agent/CONTEXT.md`, `agent/TASKS.md`, `agent/DECISIONS.md` (D-37), `agent/log/auto_changes.log`
+- **Qué y por qué:** pedido del usuario (C-0013): el informe debe dar mejor caso, peor caso y caso promedio. Al redactar, el theorist halló que en modo `costo` `limites` fija kmax = |cand|, así que el voraz cuesta Θ(min(N,L+1)·N·M), o Θ(N²M) si hay c_i = 0, y no Θ(kNM). Por eso se corrigieron los docstrings (solo comentarios; la lógica no cambió). Quedan [VERIFICAR] (fuera de la bibliografía verificada): costo C_PL de HiGHS en el certificado de la selección, Khachiyan 1979 y el umbral de underflow. Los PDF `informe/informe.pdf` y `manual/manual_tecnico.pdf` quedan DESACTUALIZADOS hasta recompilar en letX.
+- **Verificación:**
+  - scribe: `.venv/Scripts/python.exe -m pytest -q` → `273 passed in 14.37s` (re-ejecutado en esta entrada).
+  - orquestador (reportado, no re-ejecutado por el scribe): caso de la profesora `python -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out results/` → "TODO CUMPLE".
+  - orquestador (reportado): chequeo estático de LaTeX (entornos balanceados, `$` pares, 0 `\ref` sin `\label`, entornos de teorema definidos, longtable cargado) → limpio.
+  - Sin verificar: compilación LaTeX de `informe/main.tex` y `manual/manual_tecnico.tex` (sin TeX local, D-20); costo C_PL de HiGHS; Khachiyan 1979; umbral de underflow.
+- **Commit:** pendiente. Este commit único incluye C-0013 y C-0014; el hash se anota en la siguiente entrada.
+- **Siguiente paso:** el usuario compila en letX `informe/main.tex` y `manual/manual_tecnico.tex` (pdfLaTeX, 2 pasadas) y sube los PDF; después T14 (incorporar la tabla de casos en la guía de estudio).

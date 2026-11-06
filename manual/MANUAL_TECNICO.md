@@ -75,8 +75,8 @@ Al final se verifica la restricción global Σ_t x_{i,t} ≤ R_i. La corrida es 
 - **Modelo.** f(S) = Σ_j a_j [1 − Π_{i∈S}(1 − w_ij)]. Con el vector residual R_j = Π_{l∈S}(1 − w_lj) (inicial R_j = 1), la ganancia de agregar i ∉ S es Δ(i|S) = Σ_j a_j·w_ij·R_j. Al elegir i se actualiza R_j ← R_j·(1 − w_ij), en O(M).
 - **Implementación.** En cada paso `ganancias_todas` calcula el producto matriz-vector `W @ (a*R)` (las ganancias de **todos** los candidatos, O(N·M)); se enmascaran los ya elegidos, los que no son candidatos y los que no caben en el costo; se escoge con `np.argmax` (primer máximo = menor índice, D-12). Se detiene con |S| = kmax, cuando no hay candidato factible o cuando la mejor ganancia es ≤ 0.
 - **Modos** (`limites`): `k` → |S| ≤ k; `costo` → Σ c ≤ L; `ambos` → las dos. En todos |S| ≤ k significa "a lo sumo" (D-27).
-- **Heurísticas.** Modo `k`: solo `voraz_ganancia` (garantía 1 − (1 − 1/k)^k ≥ 1 − 1/e, Nemhauser–Wolsey–Fisher 1978; prueba en informe, Sección 3.3). Modos `costo` y `ambos`: el mejor entre `voraz_ganancia`, `voraz_razon` (ganancia/costo) y `singleton` (mejor nodo individual factible). En empate gana la primera en ese orden (D-23). El voraz factible salta a los candidatos que no caben en vez de detenerse (D-29). **No se afirma garantía en `costo` y `ambos`** (R-01).
-- **Costo.** Θ(k·N·M) (Θ(k·N²) con M = N en el JSON). Las evaluaciones útiles son P = kN − k(k−1)/2, pero el código calcula las N ganancias en cada paso, así que hace literalmente k·N·M multiplicaciones; la clase no cambia (informe, Sección 3.2, nota de fidelidad).
+- **Heurísticas.** Modo `k`: solo `voraz_ganancia` (garantía 1 − (1 − 1/k)^k ≥ 1 − 1/e, Nemhauser–Wolsey–Fisher 1978; prueba en informe, Sección 3.4). Modos `costo` y `ambos`: el mejor entre `voraz_ganancia`, `voraz_razon` (ganancia/costo) y `singleton` (mejor nodo individual factible). En empate gana la primera en ese orden (D-23). El voraz factible salta a los candidatos que no caben en vez de detenerse (D-29). **No se afirma garantía en `costo` y `ambos`** (R-01).
+- **Costo.** Peor caso Θ(k·N·M) en los modos `k` y `ambos` (Θ(k·N²) con M = N en el JSON). Las evaluaciones útiles son P = kN − k(k−1)/2, pero el código calcula las N ganancias en cada paso, así que hace literalmente k·N·M multiplicaciones; la clase no cambia (informe, Sección 3.2, nota de fidelidad). Por la parada temprana, el mejor caso es Θ(N·M): una o dos llamadas a `ganancias_todas` (ver "Casos de complejidad" más abajo).
 
 ### 3.3 Algoritmo de la Parte 1 (`allocate.py`)
 
@@ -85,13 +85,37 @@ Al final se verifica la restricción global Σ_t x_{i,t} ≤ R_i. La corrida es 
 - **Ciclo:** mientras se hayan asignado menos de B unidades y el montículo no esté vacío: se toma la mayor ganancia (la raíz); se incrementa `x[i]`; si `x[i] < tope[i]` se reemplaza la raíz por la nueva ganancia (`heapreplace`, O(log N)), si no se saca (`heappop`, O(log N)). Desempate por menor índice (D-12).
 - **Condición de parada:** B unidades asignadas **o** montículo vacío (D-28: si Σ topes < B, sobra presupuesto y no es un error).
 - **Invariante:** tras j pasos, las j unidades tomadas son las j mayores ganancias marginales del multiconjunto; por eso el resultado es óptimo (Teorema 3.1 del informe, por intercambio y concavidad).
-- **Costo:** T(N, B) = O(N + B log N). La utilidad final se recalcula directamente (`sum a_i ln(1+x_i)`), no se acumula.
+- **Costo:** mejor caso Θ(N) (B = 0) y peor caso Θ(N + B(1 + log N)) (topes r_i > B). El peor caso es Θ y no solo O porque `heappop` y `heapreplace` de CPython siempre bajan hasta una hoja (informe, Sección 3.3). La utilidad final se recalcula directamente (`sum a_i ln(1+x_i)`), no se acumula.
 
 ### 3.4 Certificados (`certificates.py`)
 
 - **Reparto (dualidad).** Con λ = ganancia de la última unidad asignada (0 si los topes impiden gastar B), la cota UB(λ) = λ·B + Σ_i máx_{0≤x≤r_i} [a_i ln(1+x) − λx] es ≥ al óptimo. El programa exige brecha UB − utilidad ≤ 10⁻⁹. Si se cumple, el reparto es óptimo y no hace falta conocer el óptimo por otro método.
 - **Selección (LP).** Para cualquier S factible y f monótona y submodular: f(S\*) ≤ f(S) + máx{Σ Δ(e|S)·z_e : Σ z_e ≤ k, Σ c_e z_e ≤ L, 0 ≤ z ≤ 1}. Se resuelve con `scipy.optimize.linprog` (HiGHS). Razón certificada = f(S)/cota. Vale con cupo y costo a la vez.
 - **Exactos de referencia (`exact.py`, solo validación).** `fuerza_bruta`: DFS sobre subconjuntos factibles (hasta 3 000 000 de visitas). `dp_reparto`: programación dinámica sobre nodos y presupuesto.
+
+### 3.5 Casos de complejidad (mejor, peor y promedio)
+
+Resumen de la Sección 3.3 del informe, donde están las demostraciones. Las afirmaciones de conteo se comprueban en `tests/test_casos_complejidad.py`. Notación: log = log₂; I = número de llamadas a `ganancias_todas`; V_max = Σ_{r≤kmax} C(N, r); |E| = número de aristas del JSON. **Modelo A**: los a_i son aleatorios continuos, con r y B fijos. **Modelo G**: la distribución de `generator.py` (pesos en [0.1, 0.9], a ≥ 5, c ∈ {2..7}).
+
+| Algoritmo | T_mejor | T_peor | T_prom | S(n) | Instancia testigo (mejor / peor) |
+|---|---|---|---|---|---|
+| Reparto `asignar` | Θ(N) | Θ(N + B(1+log N)) | = T_peor (A, r_i > B) | Θ(N + J) | B = 0 / r_i > B |
+| Reparto en ronda (sobre S) | Θ(1 + \|S\|) | Θ(k + B(1+log k)) | = T_peor si R_i > T_r·B | Θ(k + B) | ídem, con N ← \|S\| ≤ k |
+| DP del reparto | Θ(N(B+1)) | Θ(N(B+1)²) | invariante en a | Θ(N(B+1)) | r ≡ 0 / r_i ≥ B |
+| Voraz, modos `k`/`ambos` | Θ(N·M) | Θ(k·N·M) | Θ(k·N·M) (G) | Θ(N·M) + Θ(N + M + kN) | nodo estrella o c_i > L / w_ij < 1, L ≥ Σc |
+| Voraz, modo `costo` | Θ(N·M) | Θ(min(N, L+1)·N·M); Θ(N²M) si hay c_i = 0 | Θ(min(N, L+1)·N·M) (G, L ≥ 7) | Θ(N·M) + Θ(N²) | c_i > L / c ≡ 1, w_ij < 1 |
+| Fuerza bruta, modo `k` | invariante | Θ(N + M·Σ_{r≤k} C(N, r)) | invariante | Θ(N + kM) | cualquiera |
+| Fuerza bruta, `costo`/`ambos` | Θ(N + M) | Θ(N + M·V_max) | entre las cotas de G; se mide en T13 | Θ(N + kmax·M) | c_i > L / L ≥ Σc |
+| Certificado del reparto | Θ(\|S\|) | Θ(\|S\|) | Θ(\|S\|) | Θ(\|S\|) | cualquiera |
+| Certificado de la selección | Θ(N·M) + C_PL | Θ(N·M) + C_PL | — | Θ(N + M) + PL | C_PL no acotado [VERIFICAR] |
+| Solución completa (`k`/`ambos`, M = N, sin certificados) | Θ(N² + \|E\| + T_r·N²) | Θ(N² + \|E\| + T_r(kN² + B(1+log k))) | Ω(T_r·k·N²) ∩ O(T_r(kN² + B log k)) (G, N ≥ T_r·k) | Θ(N² + T_r(kN + B)) | B = 0, c_i > L / w_ij < 1, R_i > T_r·B |
+
+Una frase por algoritmo:
+- **Reparto**: cuesta Θ(N + Σ_j (1 + log h_j)), donde h_j es el tamaño del montículo. Con topes que se agotan, `heappop` lo encoge: por ejemplo, con r ≡ 1 y B ≥ N el costo es Θ(N log N) aunque B sea enorme.
+- **Voraz**: T = Θ(I·N·M) con p ≤ I ≤ min(kmax, p+1). La iteración que termina con `break` también paga el producto W·(a∘R).
+- **Fuerza bruta**: S se visita si y solo si |S| ≤ kmax y c(S) ≤ L. Por eso E[visitas] = Σ_S Pr[c(S) ≤ L]; no se da fórmula cerrada.
+- **Certificados**: el del reparto no depende de B. El de la selección resuelve un programa lineal con `linprog(method="highs")`, que elige entre símplex dual y punto interior; es una verificación y no forma parte del algoritmo.
+- **Solución completa**: leer W cuesta Θ(N²). En cada ronda hay al menos una llamada a `ganancias_todas`, así que T_mejor es Θ(T_r·N²). `comparar_exacto` (subcomando `run`) solo se ejecuta si N ≤ 20.
 
 ---
 

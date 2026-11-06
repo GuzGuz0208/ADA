@@ -113,7 +113,8 @@ def seleccionar(W, a, c, cand: np.ndarray, k: int, L: int, modo: str) -> Resulta
 
     Modo 'k': voraz por ganancia (garantia 1-1/e de Nemhauser-Wolsey-Fisher 1978 para f monotona submodular).
     Modos 'costo'/'ambos': mejor de {ganancia, razon, singleton}; en empate gana el primero en ese orden.
-    T = O(k * N * M) (las tres heuristicas suman a lo sumo 2 voraces + 1 singleton).
+    T = O(kmax * N * M) con kmax = k en modos 'k'/'ambos' y kmax = |cand| en modo 'costo'
+    (ahi Theta(min(N, L+1) * N * M) si todo c_i >= 1); 2 voraces + 1 singleton. Ver informe sec:casos.
     """
     kmax, Lmax = limites(modo, k, L, int(cand.sum()))
     alts = [voraz(W, a, c, cand, kmax, Lmax, "ganancia")]

@@ -98,7 +98,8 @@ def ejecutar(inst: Instancia, modo: str = "ambos", q: float = 0.0, seed: int = 2
 
     Pre: modo en MODOS, 0<=q<1, politica en POLITICAS. Pos: Corrida con resultado, tiempos por fase y
     verificacion de restricciones por ronda y global (sum_t x_{i,t} <= R_i).
-    T = O(T_rondas * (N*k*M [seleccion] + N + B log N [reparto])) con M=N en el esquema del JSON.
+    T = O(T_rondas * (kmax*N*M [seleccion] + k + B log k [reparto sobre S])) con M=N en el JSON;
+    kmax = k en modos 'k'/'ambos' y kmax <= min(N, L+1) en modo 'costo' (c_i >= 1). Ver informe sec:casos.
     """
     if modo not in MODOS:
         raise ValueError(f"modo '{modo}' invalido; use {MODOS}")
