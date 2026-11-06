@@ -326,3 +326,15 @@
   - Sin verificar: ninguna compilación la ejecutó el scribe (sin TeX local, D-20).
 - **Commit:** pendiente (el hash lo reporta el scribe al orquestador). Commit de C-0015: `fec0826`.
 - **Siguiente paso:** ejecutar `.venv/Scripts/python.exe -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out results/` y contrastar las cifras PRELIMINARES de la guía §5 con `results/caso_entrada_G2_red_15_nodos/resultado.json` (T14, R-06).
+
+### C-0017 · 2026-11-06 09:59 · claude-haiku-5.5 (scribe), por orden del orquestador (Claude Code) · tarea T08 (etiqueta `v0.1-primera-entrega` movida a la versión corregida), decisión D-41
+- **Tipo:** decision
+- **Archivos:**
+  - M `agent/CHANGELOG.md` (esta entrada), `agent/CONTEXT.md` (reescrito), `agent/TASKS.md` (nota en T08), `agent/DECISIONS.md` (D-41 nueva; notas añadidas a D-34, D-35 y D-40), `agent/log/auto_changes.log` (traza automática)
+- **Qué y por qué:** el usuario pidió que la etiqueta `v0.1-primera-entrega`, citada en README, informe y manual, apunte a la versión corregida actual y no a la original. Eligió mover la etiqueta (no crear v0.2) y autorizó el force-push solo de la etiqueta. La regla de permisos de Claude Code bloqueó `git tag -f` y `git push --force` al agente; el usuario ejecutó los dos comandos: `git tag -f -a v0.1-primera-entrega 5beb850 -m "..."` ("Updated tag (was 6c021f1)") y `git push --force origin refs/tags/v0.1-primera-entrega` ("+ 6c021f1...223f484 (forced update)"). La etiqueta pasa de `6a25d0f` a `5beb850` (decisión D-41). La rama `main` no se forzó: push normal `6a25d0f..5beb850` (D-40, orquestador).
+- **Verificación:**
+  - scribe (solo lectura): `git rev-parse v0.1-primera-entrega^{}` → `5beb850`; `git tag --points-at 5beb850` → `v0.1-primera-entrega`; `git ls-remote --tags origin v0.1-primera-entrega 'v0.1-primera-entrega^{}'` → objeto `223f484`, `^{}` = `5beb850`; `git ls-remote origin refs/heads/main` → `5beb850`; `git rev-parse HEAD` antes de esta entrada → `5beb850`.
+  - pytest: no aplica (sin cambios de código). Último resultado conocido: 273 passed (C-0014).
+  - Sin verificar: ninguna compilación de PDF (sin cambios en informe ni manual).
+- **Commit:** pendiente (el hash lo reporta el scribe al orquestador). Commit de C-0016: `5beb850`; commit de C-0015: `fec0826`. Este commit queda por delante de la etiqueta; solo toca `agent/`.
+- **Siguiente paso:** T14: ejecutar `.venv/Scripts/python.exe -m ada_g2 run --input project-docs/entrada_G2_red_15_nodos.json --out results/` y contrastar con `results/caso_entrada_G2_red_15_nodos/resultado.json` las cifras PRELIMINARES de la guía §5 (R-06); después T13.
