@@ -18,7 +18,7 @@ La profesora entrega instancias en JSON con el esquema de \texttt{entrada\_G2\_r
 \item \texttt{nodos}: para cada nodo $i$, \texttt{coeficiente\_utilidad} $a_i>0$, \texttt{presupuesto\_total\_nodo} $R_i\in\Nat$ y \texttt{costo\_participacion} $c_i\in\Nat$.
 \item \texttt{grafo}: aristas $\{u,v\}$ con \texttt{peso\_influencia} $w_{uv}\in[0,1]$.
 \end{itemize}
-En la instancia de la profesora, $N=15$, $T=3$, $k=5$, $B=30$, $L=24$ y el grafo trae $105=\binom{15}{2}$ aristas, cada par una sola vez. Los resultados obtenidos sobre esa instancia se reportan en \RES.
+En la instancia de la profesora, $N=15$, $T=3$, $k=5$, $B=30$, $L=24$ y el grafo trae $105=\binom{15}{2}$ aristas, cada par una sola vez. Los resultados obtenidos sobre esa instancia, producidos por el código con la semilla 20261105, se reportan en la Sección~\ref{sec:caso}.
 
 \paragraph{Lo que el enunciado no fija.} Ningún documento del Subproyecto 2 define la forma de $u_i$, la forma de $f$ ni la probabilidad de falla $q$; el enunciado pide ``precisar $\tau$ para la función de utilidad que el equipo implemente''. Las elecciones de modelado están en la Tabla~\ref{tab:supuestos} (D-01, D-02, D-07).
 
@@ -60,7 +60,7 @@ Si algún $a_i=0$ (fuera del esquema, que exige $a_i>0$), $g_i\equiv 0$: $u_i$ s
 \end{definicion}
 
 \begin{observacion}[relación con la Definición 3.2.1 del enunciado]
-El enunciado no incluye topes por nodo. Con $r_i\ge B$ para todo $i$ el tope nunca es activo y se recupera exactamente la Definición 3.2.1. Los topes se añaden porque el JSON trae \texttt{presupuesto\_total\_nodo} y el escenario dice que ese presupuesto es total para las $T$ rondas; se comprueba en \RES{} si llegan a ser activos en la instancia de la profesora.
+El enunciado no incluye topes por nodo. Con $r_i\ge B$ para todo $i$ el tope nunca es activo y se recupera exactamente la Definición 3.2.1. Los topes se añaden porque el JSON trae \texttt{presupuesto\_total\_nodo} y el escenario dice que ese presupuesto es total para las $T$ rondas; en la instancia de la profesora sí llegan a ser activos: en la ronda 3 los topes restantes (4, 8, 8, 4, 6) coinciden con el reparto y suman $B=30$ (Sección~\ref{sec:caso}, Tabla~\ref{tab:rondas}; origen: \texttt{results/caso\_entrada\_G2\_red\_15\_nodos/resultado.json}).
 \end{observacion}
 
 \paragraph{Tamaño de la entrada: $(N,B)$.} Crecen dos magnitudes independientes:
@@ -124,7 +124,7 @@ El enunciado pide ``el subconjunto de tamaño $k$''. En el modo \texttt{k} ambas
 
 \paragraph{Supuestos específicos.} Grafo no dirigido y simétrico (D-10; la dirección no está especificada, Q-04); independencia de las influencias (modelo de cobertura probabilística, D-02); $q=0$ para el caso de la profesora (D-07); desempates por menor índice (D-12). En una ronda $t$ los candidatos son los nodos que no fallaron (con $q=0$, todos).
 
-\paragraph{Alcance.} Esta parte es NP-difícil (Sección~\ref{sec:np}); se resuelve con el voraz de mayor ganancia marginal, con garantía $1-1/e$ \emph{solo en el modo} \texttt{k} (Sección~\ref{sec:cota}), y con fuerza bruta en instancias pequeñas para medir la razón real. Para el modo \texttt{ambos} se usa el mejor de tres voraces factibles (por ganancia, por razón ganancia/costo y el mejor nodo individual) y \textbf{no se afirma garantía teórica} para la combinación cupo+costo (R-01); la calidad se mide contra el exacto por fuerza bruta (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos) y se reporta en \RES.
+\paragraph{Alcance.} Esta parte es NP-difícil (Sección~\ref{sec:np}); se resuelve con el voraz de mayor ganancia marginal, con garantía $1-1/e$ \emph{solo en el modo} \texttt{k} (Sección~\ref{sec:cota}), y con fuerza bruta en instancias pequeñas para medir la razón real. Para el modo \texttt{ambos} se usa el mejor de tres voraces factibles (por ganancia, por razón ganancia/costo y el mejor nodo individual) y \textbf{no se afirma garantía teórica} para la combinación cupo+costo (R-01); la calidad se mide contra el exacto por fuerza bruta (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos) y se reporta en la Sección~\ref{sec:caso} (en el caso de la profesora, $f(S)/f(S^\ast)=1.0000$ en el modo \texttt{ambos}, con $3\,893$ subconjuntos factibles evaluados; origen: \texttt{resultado.json}, campo \texttt{comparacion\_exacto}).
 
 % ------------------------------------------------------------
 \subsection{Supuestos de modelado y alcance de la entrega}\label{sec:supuestos}
@@ -153,5 +153,5 @@ D-13 & $\ln$ natural; $B$ y costos enteros; \texttt{float64} con tolerancia $10^
 \caption{Supuestos de modelado (D-09 fija el formato del informe; no afecta al modelo).}\label{tab:supuestos}
 \end{table}
 
-\paragraph{Qué cubre esta primera entrega.} Formalización de ambas partes, prueba de NP-dureza de la Parte 2, optimalidad del voraz de la Parte 1 (Teorema~\ref{teo:optimo}), aplicación de la cota $1-1/e$ a nuestra $f$ (Teorema~\ref{teo:nwf}) y ejecución de la solución base sobre los casos de la profesora (\RES).
+\paragraph{Qué cubre esta primera entrega.} Formalización de ambas partes, prueba de NP-dureza de la Parte 2, optimalidad del voraz de la Parte 1 (Teorema~\ref{teo:optimo}), aplicación de la cota $1-1/e$ a nuestra $f$ (Teorema~\ref{teo:nwf}) y ejecución de la solución base sobre el caso de la profesora (Sección~\ref{sec:caso}).
 \paragraph{Qué queda para entregas posteriores.} Deducción completa de $T(n)$ con todas las constantes y validación experimental con $\ge5$ tamaños (P1); variantes obligatorias: costos con la versión de Khuller et al.\ \cite{kmn1999}, $T$ rondas con fallas y políticas de gasto, y nodos relacionados (P2).

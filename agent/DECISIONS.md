@@ -40,6 +40,7 @@ Contexto: se verificó que **ningún documento del Grupo 2** (PDF general, docx,
 | D-27 | Selección con **|S| ≤ k** en todos los modos (k, costo, ambos). Con costos, "tamaño k" y "≤k" no son equivalentes | Monotonía da el mismo óptimo en modo `k`, pero con costo un subconjunto de tamaño k puede no caber. Origen: claude/theorist (C-0007, T01) |
 | D-28 | Reparto: si el montículo se vacía antes de gastar B (Σr_i < B), el ciclo para con J = min(B, Σr_i) asignaciones; no es un error | Los topes pueden agotarse antes que el presupuesto; el código debe parar sin fallar. Origen: claude/theorist (C-0007, T01) |
 | D-29 | Voraz factible (modos costo/ambos): en cada paso elige el mejor candidato **que cabe** (salta a los que no caben, no se detiene); para cuando ninguno cabe o |S| = k | Parar en el primero que no cabe deja de aprovechar nodos baratos y no tiene justificación en el enunciado. Origen: claude/theorist (C-0007, T01) |
+| D-30 | **Estructura de README y manual** tomada de SPEC §1 y §8 (la guía §5-§6 no se pudo leer: el agente no tenía herramientas para PDF/DOCX). Supuesto abierto hasta contrastarla con las guías de la profesora | Evita inventar requisitos; el usuario debe revisar README y manual contra las guías antes de entregar. Origen: claude/report-writer (C-0009, T07) |
 
 ## Abiertas (preguntar solo si cambian el resultado)
 | ID | Pregunta | Bloquea | Default mientras tanto |

@@ -3,7 +3,7 @@
 > Espejo de estudio del LaTeX (`main.tex` + `secciones/*.tex` + `referencias.tex`). Si difieren, **manda el LaTeX**.
 > Universidad de Caldas · Análisis y Diseño de Algoritmos 2026-B · Profesora Luz Enith Guerrero · Subproyecto 2 — Reparto de presupuesto y selección de participantes · Integrante: Juan Esteban Guzmán Henao · Repositorio: https://github.com/GuzGuz0208/ADA · versión `v0.1-primera-entrega` · 6 de noviembre de 2026.
 
-**Convenciones.** "Demostrado por nosotros" = prueba completa aquí; "citado" = tomado de la bibliografía. **[VERIFICAR]** = cita no confirmada con la fuente original. **[RESULTADO-T06]** = cifra que debe producir el código con semilla fija (no se escriben a mano). D-xx = decisiones de `agent/DECISIONS.md`. $\mathbb N=\{0,1,\dots\}$, $[n]=\{1,\dots,n\}$, $\ln$ natural, $\log$ en base 2 en los costos.
+**Convenciones.** "Demostrado por nosotros" = prueba completa aquí; "citado" = tomado de la bibliografía. **[VERIFICAR]** = cita no confirmada con la fuente original. Las cifras del caso de la profesora vienen de `results/caso_entrada_G2_red_15_nodos/` (semilla 20261105) y la Sección 4 cita el archivo de origen de cada una; ninguna se escribió a mano. D-xx = decisiones de `agent/DECISIONS.md`. $\mathbb N=\{0,1,\dots\}$, $[n]=\{1,\dots,n\}$, $\ln$ natural, $\log$ en base 2 en los costos.
 
 ---
 
@@ -13,7 +13,7 @@
 Una red de $N$ nodos entrena colaborativamente un modelo durante $T$ rondas sin compartir datos crudos; cada actualización lleva ruido calibrado (más ruido = más protección, menos utilidad). Cada nodo tiene un presupuesto total de "ruido tolerable" para todo el proyecto. En cada ronda se decide (a) **qué nodos participan** (Parte 2) y (b) **cuánto presupuesto recibe cada uno** (Parte 1). Se resuelven en cadena por ronda: primero $S_t$, luego el reparto sobre $S_t$ (Fig. 3.1 del enunciado; D-08).
 
 ### 1.2 Datos comunes y esquema
-JSON con: `parametros` ($N$, $T$, $k$, $B$, $L$), `nodos` ($a_i>0$ = `coeficiente_utilidad`, $R_i$ = `presupuesto_total_nodo`, $c_i$ = `costo_participacion`), `grafo` (aristas $\{u,v\}$ con `peso_influencia` $w_{uv}\in[0,1]$). La profesora puede ejecutar **otros** JSON con este esquema: nada se fija en el código. Instancia de la profesora: $N=15$, $T=3$, $k=5$, $B=30$, $L=24$, $105=\binom{15}{2}$ aristas (cada par una vez). Resultados: **[RESULTADO-T06]**.
+JSON con: `parametros` ($N$, $T$, $k$, $B$, $L$), `nodos` ($a_i>0$ = `coeficiente_utilidad`, $R_i$ = `presupuesto_total_nodo`, $c_i$ = `costo_participacion`), `grafo` (aristas $\{u,v\}$ con `peso_influencia` $w_{uv}\in[0,1]$). La profesora puede ejecutar **otros** JSON con este esquema: nada se fija en el código. Instancia de la profesora: $N=15$, $T=3$, $k=5$, $B=30$, $L=24$, $105=\binom{15}{2}$ aristas (cada par una vez). Resultados: Sección 4 (producidos por el código con la semilla 20261105).
 Lo que el enunciado **no** fija: forma de $u_i$, de $f$, y $q$ → D-01, D-02, D-07.
 
 ### 1.3 Parte 1 — Reparto óptimo del presupuesto
@@ -32,7 +32,7 @@ $$g_i(x)=u_i(x+1)-u_i(x)=a_i\ln\frac{x+2}{x+1}=a_i\ln\Bigl(1+\frac1{x+1}\Bigr).$
 - **Restricciones:** $\sum_i x_i\le B$, $0\le x_i\le r_i$.
 - **Objetivo:** maximizar $U(x)=\sum_i u_i(x_i)$.
 
-*Relación con la Def. 3.2.1 del enunciado:* no trae topes; con $r_i\ge B$ se recupera exactamente. Se añaden porque el JSON trae `presupuesto_total_nodo`, total para las $T$ rondas; si son activos en el caso de la profesora: **[RESULTADO-T06]**.
+*Relación con la Def. 3.2.1 del enunciado:* no trae topes; con $r_i\ge B$ se recupera exactamente. Se añaden porque el JSON trae `presupuesto_total_nodo`, total para las $T$ rondas; en la instancia de la profesora sí llegan a ser activos: en la ronda 3 los topes restantes (4, 8, 8, 4, 6) coinciden con el reparto y suman $B=30$ (Sección 4, Tabla 1; origen: `results/caso_entrada_G2_red_15_nodos/resultado.json`).
 
 **Tamaño de la entrada: $(N,B)$.** $N$ = nodos a repartir (números leídos, tamaño del montículo); $B$ = unidades a repartir (decisiones unitarias del voraz). No se reduce a una variable porque el costo es $O(N+B\log N)$. En bits la entrada mide $\Theta(N\beta+\log B)$; un costo lineal en $B$ es **pseudo-polinomial** (polinomial en el valor, exponencial en la longitud: $B=2^{\log B}$), como la mochila 0/1 por PD.
 
@@ -67,7 +67,7 @@ $$\Delta(i\mid S)=f(S\cup\{i\})-f(S)=\sum_j a_j\,w_{ij}\,R_j(S).\tag{1}$$
 **$\tau$.** Manteniendo $R_j$ (inicio 1; tras elegir $i$: $R_j\leftarrow R_j(1-w_{ij})$, $O(M)$), (1) da $\tau=\Theta(M)$ y el voraz cuesta $\Theta(kNM)$ = $\Theta(kN^2)$ con $M=N$. Evaluar $f$ desde cero ($O(|S|M)$) daría $O(Nk^2M)$.
 
 **Supuestos:** grafo no dirigido (D-10, Q-04); influencias independientes (D-02); $q=0$ en el caso de la profesora (D-07); desempate por menor índice (D-12); candidatos de la ronda = nodos que no fallaron.
-**Alcance:** NP-difícil (Sección 2); voraz con garantía $1-1/e$ **solo en el modo `k`** (Sección 3.3); fuerza bruta en instancias pequeñas. Modo `ambos`: mejor de tres voraces factibles (por ganancia, por razón ganancia/costo, mejor nodo individual), **sin garantía teórica afirmada** (R-01); razón contra el exacto (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos): **[RESULTADO-T06]**.
+**Alcance:** NP-difícil (Sección 2); voraz con garantía $1-1/e$ **solo en el modo `k`** (Sección 3.3); fuerza bruta en instancias pequeñas. Modo `ambos`: mejor de tres voraces factibles (por ganancia, por razón ganancia/costo, mejor nodo individual), **sin garantía teórica afirmada** (R-01); razón contra el exacto (con $N=15$, $k=5$: a lo sumo $\sum_{r=1}^{5}\binom{15}{r}=4\,943$ subconjuntos no vacíos): en el caso de la profesora, $f(S)/f(S^\ast)=1.0000$ en el modo `ambos`, con 3 893 subconjuntos factibles evaluados (origen: `resultado.json`, `comparacion_exacto`; Sección 4).
 
 ### 1.5 Supuestos (tabla)
 | ID | Supuesto | Dónde |
@@ -85,7 +85,7 @@ $$\Delta(i\mid S)=f(S\cup\{i\})-f(S)=\sum_j a_j\,w_{ij}\,R_j(S).\tag{1}$$
 | D-12 | Desempate por menor índice | Voraces |
 | D-13 | $\ln$ natural, enteros, `float64` con tolerancia $10^{-9}$ | Ambas |
 
-**Cubre esta entrega:** formalización, NP-dureza de la Parte 2, optimalidad del voraz de la Parte 1, cota $1-1/e$ aplicada a nuestra $f$, ejecución de la base en los casos (**[RESULTADO-T06]**). **Queda:** deducción completa de $T(n)$ y validación experimental con ≥5 tamaños (P1); variantes (Khuller et al. 1999, $T$ rondas con fallas, nodos relacionados) (P2).
+**Cubre esta entrega:** formalización, NP-dureza de la Parte 2, optimalidad del voraz de la Parte 1, cota $1-1/e$ aplicada a nuestra $f$, ejecución de la base sobre el caso de la profesora (Sección 4). **Queda:** deducción completa de $T(n)$ y validación experimental con ≥5 tamaños (P1); variantes (Khuller et al. 1999, $T$ rondas con fallas, nodos relacionados) (P2).
 
 ---
 
@@ -281,6 +281,8 @@ $T(N,B)\le\alpha N+\beta B(1+\log N)+\gamma$ ⇒ $T(N,B)\in O(N+B\log N)$. Mejor
 | 14–15 | actualizar $R$ | $k(M+1)+kM$ | $\Theta(kM)$ |
 
 Dominante: línea 10, exactamente $P\cdot M$ veces ⇒ $T(N,k,M)\in\Theta(kNM)$; $\tau=\Theta(M)$ (líneas 8–10). **JSON ($M=N$): $\Theta(kN^2)$.** Espacio $\Theta(NM)$ (entrada) + $\Theta(N+M)$.
+
+**Nota de fidelidad al código (hallazgo del verifier, C-0008).** El pseudocódigo omite los ya elegidos (línea 7): evaluaciones útiles $P=kN-k(k-1)/2$. La implementación (`src/ada_g2/select.py`) calcula en cada paso las ganancias de *todos* los candidatos con $W(a\odot R)$ y luego enmascara los ya elegidos: hace literalmente $k\cdot N\cdot M$ multiplicaciones, no $P\cdot M$. Como $P>kN/2$, la diferencia es un factor $<2$ y la clase $\Theta(kNM)$ se mantiene. La prueba `test_conteo_evaluaciones_P_por_M` (`tests/test_seleccion.py`) lo cuenta.
 **Fuerza bruta:** $\sum_{r\le k}\binom Nr$ subconjuntos × $O(rM)$; con $k\le N/2$, $\sum_{r\le k}\binom Nr\le(k+1)\binom Nk$: exponencial si $k\propto N$. En modo `k` bastan los de tamaño exactamente $k$.
 
 ### 3.3 Cota $1-1/e$ (modo `k`)
@@ -293,11 +295,91 @@ Dominante: línea 10, exactamente $P\cdot M$ veces ⇒ $T(N,k,M)\in\Theta(kNM)$;
 5. $\delta_0=\mathrm{OPT}$ (H1) ⇒ $\delta_k\le(1-\frac1k)^k\mathrm{OPT}$.
 6. $1-z\le e^{-z}$ ⇒ $(1-\frac1k)^k\le e^{-1}$. ■
 
-**Aplicación a nuestra $f$:** (H1)–(H3) = Lema 2 ($a>0$, $w\in[0,1]$, validados); (H4) = modo `k`; el Algoritmo 2 da $k$ pasos de máxima ganancia ($k<N$) ⇒ **garantía $1-1/e$ en el modo `k`**. Verificación empírica contra fuerza bruta (familias sintéticas, porque el caso de la profesora se satura, R-02): **[RESULTADO-T12]**; razón en el caso de la profesora: **[RESULTADO-T06]**.
+**Aplicación a nuestra $f$:** (H1)–(H3) = Lema 2 ($a>0$, $w\in[0,1]$, validados); (H4) = modo `k`; el Algoritmo 2 da $k$ pasos de máxima ganancia ($k<N$) ⇒ **garantía $1-1/e$ en el modo `k`**. Verificación empírica contra fuerza bruta (familias sintéticas, porque el caso de la profesora se satura, R-02): ver el párrafo siguiente; razón en el caso de la profesora: Sección 4.
 
-**Obs. 3.7 (si falla una hipótesis).** (H1): si $f(\emptyset)=c>0$ la cota vale para $f-c$. (H3): $V=\{1,2,3\}$, $f(S)=10\cdot\mathbf 1[\{1,2\}\subseteq S]+\mathbf 1[3\in S]$, $k=2$: voraz elige 3 y luego 1 → $f=1$; $\mathrm{OPT}=10$; razón $0.1$. (H4): costos, $f(\{1\})=2$, $c_1=1$; $f(\{2\})=L$, $c_2=L\ge3$; voraz por razón toma 1 y ya no cabe 2: $2$ vs $L$, razón $2/L\to0$ ⇒ por eso Khuller et al. 1999 toma el mejor con el mejor nodo individual; **para `ambos` no se afirma garantía** (R-01): **[RESULTADO-T06]**.
+**Verificación empírica de la cota (medida por el verifier; origen: `tests/test_seleccion.py`, T12).** Sobre 3 familias sintéticas × 250 instancias, modo `k`: razón mínima voraz/exacto $0.8885$ (familia rala; cifra registrada en `agent/CHANGELOG.md`, C-0008), nunca por debajo de $1-(1-1/k)^k$ (`test_restricciones_razon_y_certificado`). Instancia ajustada D-15 (`test_instancia_ajustada_razon_exacta`): razones exactas $3/4$, $19/27$, $2101/3125$ para $k=2,3,5$ = $1-(1-1/k)^k$: la cota es ajustada para este voraz. Modos `costo` y `ambos`: razones mínimas medidas $0.8864$ y $0.8148$, **solo medición, sin garantía** (R-01).
+
+**Obs. 3.7 (si falla una hipótesis).** (H1): si $f(\emptyset)=c>0$ la cota vale para $f-c$. (H3): $V=\{1,2,3\}$, $f(S)=10\cdot\mathbf 1[\{1,2\}\subseteq S]+\mathbf 1[3\in S]$, $k=2$: voraz elige 3 y luego 1 → $f=1$; $\mathrm{OPT}=10$; razón $0.1$. (H4): costos, $f(\{1\})=2$, $c_1=1$; $f(\{2\})=L$, $c_2=L\ge3$; voraz por razón toma 1 y ya no cabe 2: $2$ vs $L$, razón $2/L\to0$ ⇒ por eso Khuller et al. 1999 toma el mejor con el mejor nodo individual; **para `ambos` no se afirma garantía** (R-01): se mide la razón contra el exacto (Sección 4 y párrafo de verificación empírica de 3.3).
 **Contraejemplo 3.8 (el voraz de la Parte 2 no es óptimo).** $U=\{1..6\}$, $S_1=\{1,2,3,4\}$, $S_2=\{1,2,5\}$, $S_3=\{3,4,6\}$, $k=2$: voraz $S_1$ (4), luego empate 1–1 → $S_2$: $f=5$. Óptimo $S_2\cup S_3$: 6. Razón $5/6\ge1-(1/2)^2=0.75$.
 **Obs. 3.9.** Feige 1998: para Cobertura Máxima ninguna razón $1-1/e+\varepsilon$ en tiempo polinomial salvo P=NP (verificado a nivel de resumen). Como Cobertura Máxima es caso particular (Lema 2.3), la cota es la mejor posible en general.
+
+---
+
+## 4. Ejecución del caso de la profesora
+
+Salida de `python -m ada_g2 run` sobre `project-docs/entrada_G2_red_15_nodos.json`. Cada cifra sale de `results/caso_entrada_G2_red_15_nodos/` (`resultado.json`, `tiempo.csv`, `traza.md`, `traza.csv`); nada se calculó a mano. Parámetros (`resultado.json`, `parametros`): $N=15$, $T=3$, $k=5$, $B=30$, $L=24$, 105 aristas, modo `ambos` (D-03), $q=0$ (D-07), política `concentrado` (D-22), semilla 20261105. Entorno: Python 3.12.10, Windows-11-10.0.26300-SP0. `avisos` vacío; `todo_cumple = true`.
+
+### 4.1 Resultado por ronda (Tabla 1; origen: `resultado.json`)
+| Ronda | Selección $S_t$ | $f(S_t)$ | $\sum c_i$ | Reparto N09/N11/N13/N14/N15 | Topes efectivos | $\sum u_i$ |
+|---|---|---|---|---|---|---|
+| 1 | N09, N11, N13, N14, N15 | 145.5795 | 23 | 7 / 5 / 5 / 7 / 6 | 18 / 18 / 18 / 18 / 18 | 88.5640 |
+| 2 | N09, N11, N13, N14, N15 | 145.5795 | 23 | 7 / 5 / 5 / 7 / 6 | 11 / 13 / 13 / 11 / 12 | 88.5640 |
+| 3 | N09, N11, N13, N14, N15 | 145.5795 | 23 | 4 / 8 / 8 / 4 / 6 | 4 / 8 / 8 / 4 / 6 | 85.6108 |
+| Totales | | $\sum_t f=436.7386$ | | | | $\sum_t u=262.7387$ |
+
+Lectura: (i) con $q=0$ y ningún nodo agotado, $S_1=S_2=S_3$ (D-21); solo cambia el reparto porque los topes restantes bajan (D-06). (ii) Los topes **sí** son activos en la ronda 3: restan $4,8,8,4,6$ (suman $30=B$) y el reparto coincide con ellos. (iii) Cada participante termina con gasto total 18 = `presupuesto_total_nodo` (`totales.gasto_por_nodo`).
+
+### 4.2 Traza resumida de la ronda 1 (origen: `traza.md`, 6 decimales)
+Selección (`voraz_ganancia`, elegida):
+| Paso | Elegido | Ganancia marginal | Costo acum. | $f$ acum. | Mejor competidor |
+|---|---|---|---|---|---|
+| 1 | N11 | 103.490000 | 4 | 103.490000 | N09 (95.7000) |
+| 2 | N14 | 24.278250 | 7 | 127.768250 | N09 (23.3850) |
+| 3 | N09 | 9.932737 | 10 | 137.700987 | N07 (9.3122) |
+| 4 | N15 | 5.530613 | 16 | 143.231600 | N13 (4.1325) |
+| 5 | N13 | 2.347920 | 23 | 145.579520 | N12 (2.2442) |
+
+Alternativas (`rondas[0].detalle_seleccion`): `voraz_razon` $S=\{$N05, N09, N14, N11, N15$\}$, $f=145.1056$, costo 18; `singleton` $S=\{$N11$\}$, $f=103.4900$, costo 4. Se elige la de mayor $f$ (D-23).
+
+Reparto unidad a unidad (tope 18 cada uno):
+| Unidad | Nodo | $x$ antes | Ganancia marginal | Utilidad acum. |
+|---|---|---|---|---|
+| 1 | N14 | 0 | 7.000787 | 7.000787 |
+| 2 | N09 | 0 | 6.862157 | 13.862944 |
+| 3 | N15 | 0 | 6.584898 | 20.447842 |
+| 4 | N13 | 0 | 5.753122 | 26.200963 |
+| 5 | N11 | 0 | 5.267919 | 31.468882 |
+| … | | | | |
+| 30 | N09 | 6 | 1.321961 | 88.563953 |
+
+Reparto final N09=7, N11=5, N13=5, N14=7, N15=6, utilidad 88.563953. La última ganancia (1.3220) es el $\lambda$ del certificado de dualidad.
+
+### 4.3 Verificación de restricciones (origen: `resultado.json`, `verificacion_restricciones`; valores de la ronda 1)
+| Restricción | Valor | Límite | Cumple |
+|---|---|---|---|
+| $\lvert S\rvert\le k$ | 5 | 5 | sí |
+| $\sum c\le L$ | 23 | 24 | sí |
+| $\sum x\le B$ | 30 | 30 | sí |
+| $x_i\le$ tope$_i$ (valor = máx. $x_i-$tope$_i$) | −11 | 0 | sí |
+| $x_i\le$ restante$_i$ | sin violaciones | — | sí |
+| $x_i\ge0$ entero (mín. de $x$) | 5 | 0 | sí |
+| $S\subseteq$ disponibles | sin violaciones | — | sí |
+| $f$ incremental = $f$ directa | $2.8422\times10^{-14}$ | $10^{-9}$ | sí |
+
+Rondas 2 y 3 también cumplen (en la 3 el valor del tope es 0: tope activo). Global $\sum_t x_{i,t}\le R_i$: sin violaciones.
+
+### 4.4 Certificados y comparación con el exacto
+- **Parte 1 (dualidad de Lagrange; `certificado_reparto`).** $\lambda=1.3220$ (rondas 1-2) y $0.8952$ (ronda 3); cota = utilidad en las tres; **brecha 0** (tolerancia $10^{-9}$).
+- **Parte 2 (LP; `certificado_seleccion`).** $f(S)=145.5795$; extra $6.4076$; **cota superior 151.9871**; **razón certificada 0.9578**. Vale con cupo+costo aunque no haya garantía a priori (R-01).
+- **Exacto, modo `ambos` (`comparacion_exacto`).** 3 893 subconjuntos evaluados de 4 944 posibles (con el vacío). $S^\ast=\{$N09, N11, N13, N14, N15$\}$, $f^\ast=145.5795$, **razón 1.0000**. Reparto = DP en las tres rondas (88.5640, 88.5640, 85.6108; diferencia $1.4211\times10^{-14}$).
+- **Exacto, modo `k` (origen: `tests/test_caso_profesora.py`; reproducible con `--modo k`).** $S^\ast=\{$N09, N11, N12, N13, N15$\}$, $f^\ast=145.9072$, 4 944 subconjuntos; razón del voraz **0.99775**. Garantía teórica en este modo: $2101/3125=0.67232\ge1-1/e$.
+Una razón 1.0000 en un caso es una medición, no una garantía.
+
+### 4.5 Tiempos (origen: `tiempo.csv`, mediana de 5 repeticiones, ms)
+| Fase | ms | Fase | ms |
+|---|---|---|---|
+| carga_json | 0.5687 | seleccion_r1 | 0.4073 |
+| seleccion (3 rondas) | 1.2734 | reparto_r1 | 0.0433 |
+| reparto (3 rondas) | 0.1350 | seleccion_r2 | 0.4279 |
+| verificacion | 0.0526 | reparto_r2 | 0.0416 |
+| certificados | 5.2023 | seleccion_r3 | 0.3949 |
+| pipeline_total | 6.6853 | reparto_r3 | 0.0484 |
+| referencia_exacta (1 corrida) | 51.2363 | | |
+
+Con $N=15$ solo no se estima $T(n)$: falta el barrido por tamaños (T13).
+
+### 4.6 Advertencia de saturación (R-02)
+Grafo completo con pesos $\ge0.2$: $f$ se satura. $f(V)=\sum a_j=147.8$ (JSON de entrada) y la ronda 1 alcanza $145.5795/147.8=0.9850$. Las tres heurísticas dan valores cercanos (`voraz_razon` 145.1056, diferencia 0.4740) y el óptimo coincide con el voraz: el caso **discrimina poco**. La verificación de $1-1/e$ se hace en familias sintéticas y en la instancia ajustada D-15, no en este grafo.
 
 ---
 

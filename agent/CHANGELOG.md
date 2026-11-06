@@ -164,3 +164,29 @@
   - No bloqueante (`io.py`): un id repetido produce cascada de "arista a nodo inexistente" y el error de nodo inexistente oculta el de peso.
 - **Commit:** pendiente (commit de esta misma entrada; el hash se anota en la siguiente entrada)
 - **Siguiente paso:** `report-writer` (T07): `grep -rn "RESULTADO-T06" informe/` y sustituir los marcadores por las cifras de `results/caso_entrada_G2_red_15_nodos/resultado.json`; luego README y manual.
+
+### C-0009 · 2026-11-05 22:32 · scribe (claude-haiku-5.5), registrando trabajo de report-writer (claude-sonnet) y revisión de consistencia parcial del orquestador (claude-opus-5.5) · tarea T07, T08 (parcial)
+- **Tipo:** docs
+- **Archivos:**
+  - M `README.md` — reescrito: identificación, Python 3.12.10, instalación, ejemplo pequeño (`generar --n 6 --seed 7`: exit 0, Σf=97.6109, Σu=89.5223), resultados esperados, pruebas, códigos de salida
+  - A `manual/MANUAL_TECNICO.md` — entorno, arquitectura, funcionamiento, uso, validación, límites
+  - A `informe/secciones/04_caso_profesora.tex` — tabla por ronda, traza resumida de la ronda 1, verificación de restricciones, certificados, comparación con el exacto, tiempos, saturación R-02
+  - M `informe/main.tex` — quita la macro `\RES`; añade el `\input` de la sección 04
+  - M `informe/secciones/01_formalizacion.tex`, `informe/secciones/03_optimalidad_y_cota.tex` — marcadores [RESULTADO-T06] / [RESULTADO-T12] sustituidos por cifras reales; nota k·N·M frente a P = kN−k(k−1)/2 (en 03)
+  - M `informe/INFORME.md` — espejo sincronizado con el LaTeX
+  - M `agent/SPEC.md` — §8: ítems 1–4 marcados con nota; ítem 5 pendiente
+  - M `agent/TASKS.md` — T07 ✅; T08 🔄; nota en T10
+  - M `agent/DECISIONS.md` — D-30 (estructura de README y manual sin poder leer las guías)
+  - M `agent/CONTEXT.md` — reescrito (estado, siguiente paso, pendientes, testigo)
+  - M `agent/CHANGELOG.md` — solo esta entrada añadida
+  - M `agent/log/auto_changes.log` — traza automática
+- **Qué y por qué:** cierra la documentación de la primera entrega (T07) y deja T08 en parcial. Informe, README y manual usan las mismas cifras del código ejecutado. El agente de documentación no pudo leer las guías PDF/DOCX, así que la estructura sigue SPEC §1 y §8 (D-30); el usuario debe contrastarla antes de entregar.
+- **Verificación:**
+  - report-writer: `pytest -q` → 239 passed in 16.34s.
+  - orquestador: chequeo estructural del LaTeX (sin caracteres de control; entornos begin/end y llaves balanceadas; $ pares; cada \ref con su \label y cada \cite con su \bibitem; \input de 01–04): OK.
+  - orquestador: grep de cifras (145.5795, 88.5640, 85.6108, 436.7386, 262.7387, 145.9072, 0.9578, 151.9871, λ=1.3220/0.8952) coincide entre informe, INFORME.md, README, manual, `results/caso_entrada_G2_red_15_nodos/resultado.json` y `traza.md`. Sin marcadores sin rellenar.
+  - Ejemplo del README (`generar --n 6 --seed 7`): reportado por report-writer; scribe no lo re-ejecutó.
+  - Sin verificar: compilación LaTeX (sin TeX local, D-20); contraste con las guías de la profesora (D-30).
+  - Tag `v0.1-primera-entrega`: NO creado, a propósito (se crea tras la compilación en letX y la confirmación de la portada).
+- **Commit:** pendiente (hash en la siguiente entrada)
+- **Siguiente paso:** el usuario compila `informe/` en letX y confirma la fecha de portada; después `git tag v0.1-primera-entrega` (T08).

@@ -52,7 +52,6 @@
 \newcommand{\Q}{\mathbb{Q}}
 \newcommand{\OPT}{\mathrm{OPT}}
 \newcommand{\VER}{\textbf{[VERIFICAR]}}
-\newcommand{\RES}{\textbf{[RESULTADO-T06]}}
 
 \begin{document}
 
@@ -79,7 +78,7 @@ Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
 \addcontentsline{toc}{section}{Convenciones del documento}
 \begin{itemize}[leftmargin=*]
 \item \textbf{Demostrado por nosotros} vs.\ \textbf{citado}: cada resultado indica si la prueba está completa en este informe o si se toma de la bibliografía. Las referencias que no se han podido confirmar con la fuente original llevan \VER.
-\item \RES: lugar donde va una cifra que debe producir el código (\texttt{python -m ada\_g2 run \dots}) con semilla fija. Ninguna cifra del caso de la profesora se escribe a mano.
+\item \textbf{Cifras del caso de la profesora}: todas provienen de la ejecución de \texttt{python -m ada\_g2 run \dots} con la semilla 20261105 y están en \texttt{results/caso\_entrada\_G2\_red\_15\_nodos/}; la Sección~\ref{sec:caso} cita el archivo de origen de cada una. Ninguna se escribió a mano.
 \item Los supuestos de modelado se identifican como D-xx (registro de decisiones del proyecto, \texttt{agent/DECISIONS.md}).
 \item $\Nat=\{0,1,2,\dots\}$; $[n]=\{1,\dots,n\}$; $\ln$ es el logaritmo natural; $\log$ sin base indica base 2 en los costos.
 \end{itemize}
@@ -87,6 +86,7 @@ Subproyecto 2 — Reparto de presupuesto y selección de participantes\\[0.6cm]}
 \input{secciones/01_formalizacion}
 \input{secciones/02_np_dureza}
 \input{secciones/03_optimalidad_y_cota}
+\input{secciones/04_caso_profesora}
 \input{referencias}
 
 \end{document}
